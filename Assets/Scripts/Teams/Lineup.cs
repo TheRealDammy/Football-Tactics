@@ -43,5 +43,26 @@ namespace FootballTactics.Teams
                 ? player
                 : null;
         }
+
+        public bool ReplacePlayer(Player playerOff, Player playerOn)
+        {
+            string slotId = null;
+
+            foreach (var assignment in assignments)
+            {
+                if (assignment.Value == playerOff)
+                {
+                    slotId = assignment.Key;
+                    break;
+                }
+            }
+
+            if (slotId == null)
+                return false;
+
+            assignments[slotId] = playerOn;
+
+            return true;
+        }
     }
 }

@@ -127,63 +127,84 @@ namespace FootballTactics.Simulation
         {
             return new FormationDefinition(
                 Formation.FourFourTwo,
-
                 new List<FormationSlot>
                 {
-                    new(
-                        "GK",
-                        FormationArea.Goalkeeper,
-                        PlayerPosition.Goalkeeper),
+            new(
+                "GK",
+                FormationArea.Goalkeeper,
+                PlayerPosition.Goalkeeper,
+                50,
+                90),
 
-                    new(
-                        "LB",
-                        FormationArea.LeftBack,
-                        PlayerPosition.Defender),
+            new(
+                "LB",
+                FormationArea.LeftBack,
+                PlayerPosition.Defender,
+                12,
+                72),
 
-                    new(
-                        "LCB",
-                        FormationArea.CentreBack,
-                        PlayerPosition.Defender),
+            new(
+                "LCB",
+                FormationArea.CentreBack,
+                PlayerPosition.Defender,
+                38,
+                72),
 
-                    new(
-                        "RCB",
-                        FormationArea.CentreBack,
-                        PlayerPosition.Defender),
+            new(
+                "RCB",
+                FormationArea.CentreBack,
+                PlayerPosition.Defender,
+                62,
+                72),
 
-                    new(
-                        "RB",
-                        FormationArea.RightBack,
-                        PlayerPosition.Defender),
+            new(
+                "RB",
+                FormationArea.RightBack,
+                PlayerPosition.Defender,
+                88,
+                72),
 
-                    new(
-                        "LM",
-                        FormationArea.LeftMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "LM",
+                FormationArea.LeftMidfield,
+                PlayerPosition.Midfielder,
+                10,
+                48),
 
-                    new(
-                        "LCM",
-                        FormationArea.CentreMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "LCM",
+                FormationArea.CentreMidfield,
+                PlayerPosition.Midfielder,
+                38,
+                48),
 
-                    new(
-                        "RCM",
-                        FormationArea.CentreMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "RCM",
+                FormationArea.CentreMidfield,
+                PlayerPosition.Midfielder,
+                62,
+                48),
 
-                    new(
-                        "RM",
-                        FormationArea.RightMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "RM",
+                FormationArea.RightMidfield,
+                PlayerPosition.Midfielder,
+                90,
+                48),
 
-                    new(
-                        "LS",
-                        FormationArea.LeftWing,
-                        PlayerPosition.Attacker),
+            new(
+                "LS",
+                FormationArea.LeftWing,
+                PlayerPosition.Attacker,
+                38,
+                24),
 
-                    new(
-                        "RS",
-                        FormationArea.RightWing,
-                        PlayerPosition.Attacker)
+            new(
+                "RS",
+                FormationArea.RightWing,
+                PlayerPosition.Attacker,
+                62,
+                24)
                 });
         }
 
@@ -195,63 +216,84 @@ namespace FootballTactics.Simulation
         {
             return new FormationDefinition(
                 Formation.FourThreeThree,
-
                 new List<FormationSlot>
                 {
-                    new(
-                        "GK",
-                        FormationArea.Goalkeeper,
-                        PlayerPosition.Goalkeeper),
+            new(
+                "GK",
+                FormationArea.Goalkeeper,
+                PlayerPosition.Goalkeeper,
+                50,
+                90),
 
-                    new(
-                        "LB",
-                        FormationArea.LeftBack,
-                        PlayerPosition.Defender),
+            new(
+                "LB",
+                FormationArea.LeftBack,
+                PlayerPosition.Defender,
+                12,
+                72),
 
-                    new(
-                        "LCB",
-                        FormationArea.CentreBack,
-                        PlayerPosition.Defender),
+            new(
+                "LCB",
+                FormationArea.CentreBack,
+                PlayerPosition.Defender,
+                38,
+                72),
 
-                    new(
-                        "RCB",
-                        FormationArea.CentreBack,
-                        PlayerPosition.Defender),
+            new(
+                "RCB",
+                FormationArea.CentreBack,
+                PlayerPosition.Defender,
+                62,
+                72),
 
-                    new(
-                        "RB",
-                        FormationArea.RightBack,
-                        PlayerPosition.Defender),
+            new(
+                "RB",
+                FormationArea.RightBack,
+                PlayerPosition.Defender,
+                88,
+                72),
 
-                    new(
-                        "LCM",
-                        FormationArea.CentreMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "LCM",
+                FormationArea.CentreMidfield,
+                PlayerPosition.Midfielder,
+                28,
+                50),
 
-                    new(
-                        "CM",
-                        FormationArea.CentreMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "CM",
+                FormationArea.CentreMidfield,
+                PlayerPosition.Midfielder,
+                50,
+                46),
 
-                    new(
-                        "RCM",
-                        FormationArea.CentreMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "RCM",
+                FormationArea.CentreMidfield,
+                PlayerPosition.Midfielder,
+                72,
+                50),
 
-                    new(
-                        "LW",
-                        FormationArea.LeftWing,
-                        PlayerPosition.Attacker),
+            new(
+                "LW",
+                FormationArea.LeftWing,
+                PlayerPosition.Attacker,
+                15,
+                25),
 
-                    new(
-                        "ST",
-                        FormationArea.Striker,
-                        PlayerPosition.Attacker),
+            new(
+                "ST",
+                FormationArea.Striker,
+                PlayerPosition.Attacker,
+                50,
+                17),
 
-                    new(
-                        "RW",
-                        FormationArea.RightWing,
-                        PlayerPosition.Attacker)
+            new(
+                "RW",
+                FormationArea.RightWing,
+                PlayerPosition.Attacker,
+                85,
+                25)
                 });
         }
 
@@ -263,63 +305,84 @@ namespace FootballTactics.Simulation
         {
             return new FormationDefinition(
                 Formation.FourTwoThreeOne,
-
                 new List<FormationSlot>
                 {
-                    new(
-                        "GK",
-                        FormationArea.Goalkeeper,
-                        PlayerPosition.Goalkeeper),
+            new(
+                "GK",
+                FormationArea.Goalkeeper,
+                PlayerPosition.Goalkeeper,
+                50,
+                90),
 
-                    new(
-                        "LB",
-                        FormationArea.LeftBack,
-                        PlayerPosition.Defender),
+            new(
+                "LB",
+                FormationArea.LeftBack,
+                PlayerPosition.Defender,
+                12,
+                72),
 
-                    new(
-                        "LCB",
-                        FormationArea.CentreBack,
-                        PlayerPosition.Defender),
+            new(
+                "LCB",
+                FormationArea.CentreBack,
+                PlayerPosition.Defender,
+                38,
+                72),
 
-                    new(
-                        "RCB",
-                        FormationArea.CentreBack,
-                        PlayerPosition.Defender),
+            new(
+                "RCB",
+                FormationArea.CentreBack,
+                PlayerPosition.Defender,
+                62,
+                72),
 
-                    new(
-                        "RB",
-                        FormationArea.RightBack,
-                        PlayerPosition.Defender),
+            new(
+                "RB",
+                FormationArea.RightBack,
+                PlayerPosition.Defender,
+                88,
+                72),
 
-                    new(
-                        "LDM",
-                        FormationArea.DefensiveMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "LDM",
+                FormationArea.DefensiveMidfield,
+                PlayerPosition.Midfielder,
+                40,
+                53),
 
-                    new(
-                        "RDM",
-                        FormationArea.DefensiveMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "RDM",
+                FormationArea.DefensiveMidfield,
+                PlayerPosition.Midfielder,
+                60,
+                53),
 
-                    new(
-                        "LW",
-                        FormationArea.LeftWing,
-                        PlayerPosition.Attacker),
+            new(
+                "LW",
+                FormationArea.LeftWing,
+                PlayerPosition.Attacker,
+                15,
+                27),
 
-                    new(
-                        "CAM",
-                        FormationArea.AttackingMidfield,
-                        PlayerPosition.Midfielder),
+            new(
+                "CAM",
+                FormationArea.AttackingMidfield,
+                PlayerPosition.Midfielder,
+                50,
+                34),
 
-                    new(
-                        "RW",
-                        FormationArea.RightWing,
-                        PlayerPosition.Attacker),
+            new(
+                "RW",
+                FormationArea.RightWing,
+                PlayerPosition.Attacker,
+                85,
+                27),
 
-                    new(
-                        "ST",
-                        FormationArea.Striker,
-                        PlayerPosition.Attacker)
+            new(
+                "ST",
+                FormationArea.Striker,
+                PlayerPosition.Attacker,
+                50,
+                16)
                 });
         }
     }

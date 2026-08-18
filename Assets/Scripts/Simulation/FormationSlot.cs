@@ -30,14 +30,24 @@ namespace FootballTactics.Simulation
 
         public PlayerPosition RequiredPosition { get; }
 
+        // Position on the pitch as percentages.
+        public float X { get; }
+
+        public float Y { get; }
+
         public FormationSlot(
             string id,
             FormationArea area,
-            PlayerPosition requiredPosition)
+            PlayerPosition requiredPosition,
+            float x,
+            float y)
         {
             Id = id;
             Area = area;
             RequiredPosition = requiredPosition;
+
+            X = x;
+            Y = y;
         }
     }
 }

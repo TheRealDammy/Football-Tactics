@@ -1,73 +1,69 @@
 .root {
     flex-grow: 1;
 
-    background-color: rgb(13, 14, 18);
+    background-color: rgb(12, 14, 18);
 
-    padding-left: 28px;
-    padding-right: 28px;
-    padding-top: 24px;
-    padding-bottom: 24px;
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 18px;
+    padding-bottom: 18px;
 
     color: rgb(235, 237, 242);
 }
 
-.header {
-    flex-direction: row;
 
+/* =========================================================
+   HEADER
+   ========================================================= */
+
+.header {
+    flex-shrink: 0;
+
+    height: 68px;
+
+    flex-direction: row;
     justify-content: space-between;
     align-items: center;
 
-    height: 60px;
+    margin-bottom: 12px;
 
-    margin-bottom: 15px;
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(45, 48, 57);
 }
 
 .title {
-    font-size: 28px;
+    font-size: 23px;
 
-    color: rgb(245, 246, 249);
+    color: rgb(246, 247, 250);
 
     -unity-font-style: bold;
 }
 
-.formation-summary {
-    font-size: 16px;
+.club-name {
+    margin-top: 2px;
+
+    font-size: 12px;
+
+    color: rgb(145, 150, 162);
+}
+
+.formation-control {
+    flex-direction: row;
+    align-items: center;
+}
+
+.formation-label {
+    margin-right: 10px;
+
+    font-size: 13px;
 
     color: rgb(160, 165, 178);
 
     -unity-font-style: bold;
 }
 
-.toolbar {
-    flex-direction: row;
-
-    align-items: center;
-
-    height: 48px;
-
-    margin-bottom: 14px;
-
-    padding-left: 14px;
-    padding-right: 14px;
-
-    background-color: rgb(23, 25, 31);
-
-    border-width: 1px;
-    border-color: rgb(49, 52, 61);
-}
-
-.toolbar-label {
-    margin-right: 12px;
-
-    font-size: 11px;
-
-    color: rgb(145, 150, 163);
-
-    -unity-font-style: bold;
-}
-
 .formation-dropdown {
-    width: 150px;
+    width: 140px;
     height: 32px;
 }
 
@@ -79,81 +75,105 @@
 .main {
     flex-grow: 1;
 
+    min-width: 0;
     min-height: 0;
 
     flex-direction: row;
 }
 
-.lineup-container {
+
+/* =========================================================
+   PITCH
+   ========================================================= */
+
+.pitch {
     flex-grow: 1;
 
     min-width: 0;
     min-height: 0;
 
-    padding: 20px;
-
-    background-color: rgb(22, 24, 30);
-
-    border-width: 1px;
-    border-color: rgb(48, 51, 60);
-}
-
-.player-panel {
-    width: 330px;
-
-    min-width: 330px;
-
-    margin-left: 15px;
+    position: relative;
 
     padding: 18px;
 
+    background-color: rgb(25, 66, 45);
+
+    border-width: 1px;
+    border-color: rgb(71, 112, 87);
+}
+
+.pitch::after {
+    content: "";
+
+    position: absolute;
+
+    left: 8%;
+    right: 8%;
+    top: 8%;
+    bottom: 8%;
+
+    border-width: 1px;
+    border-color: rgba(220, 235, 225, 0.25);
+}
+
+.pitch::before {
+    content: "";
+
+    position: absolute;
+
+    left: 50%;
+    top: 8%;
+    bottom: 8%;
+
+    width: 1px;
+
+    background-color: rgba(220, 235, 225, 0.20);
+}
+
+.lineup-container {
+    position: relative;
+
+    flex-grow: 1;
+
+    min-width: 0;
+    min-height: 0;
+}
+
+
+/* =========================================================
+   PLAYER PANEL
+   ========================================================= */
+
+.player-panel {
+    width: 300px;
+
+    min-width: 300px;
+
+    margin-left: 12px;
+
+    padding: 16px;
+
     background-color: rgb(22, 24, 30);
 
     border-width: 1px;
     border-color: rgb(48, 51, 60);
 }
 
+.section-title {
+    font-size: 17px;
 
-/* =========================================================
-   LINEUP BUTTONS
-   ========================================================= */
+    color: rgb(243, 245, 248);
 
-.lineup-slot {
-    width: 135px;
+    -unity-font-style: bold;
+}
 
-    min-height: 58px;
-
-    margin-bottom: 8px;
-
-    background-color: rgb(42, 45, 54);
-
-    border-width: 1px;
-    border-color: rgb(69, 73, 84);
-
-    color: rgb(235, 237, 242);
+.panel-subtitle {
+    margin-top: 4px;
+    margin-bottom: 12px;
 
     font-size: 11px;
 
-    -unity-font-style: bold;
-}
-
-.lineup-slot:hover {
-    background-color: rgb(57, 61, 72);
-}
-
-
-/* =========================================================
-   PLAYER LIST
-   ========================================================= */
-
-.section-title {
-    margin-bottom: 14px;
-
-    font-size: 17px;
-
-    color: rgb(242, 244, 247);
-
-    -unity-font-style: bold;
+    color: rgb(145, 150, 163);
 }
 
 .player-list-container {
@@ -162,11 +182,56 @@
     min-height: 0;
 }
 
+
+/* =========================================================
+   PITCH PLAYER BUTTONS
+   ========================================================= */
+
+.lineup-slot {
+    position: absolute;
+
+    width: 108px;
+    height: 62px;
+
+    min-width: 108px;
+    min-height: 62px;
+
+    margin: 0;
+
+    transform-origin: center;
+
+    background-color: rgb(31, 52, 68);
+
+    border-width: 1px;
+    border-color: rgb(92, 113, 135);
+
+    color: rgb(242, 244, 247);
+
+    font-size: 10px;
+
+    -unity-font-style: bold;
+}
+
+.lineup-slot:hover {
+    background-color: rgb(44, 68, 87);
+
+    border-color: rgb(120, 140, 160);
+}
+
+.lineup-slot:active {
+    background-color: rgb(57, 82, 103);
+}
+
+
+/* =========================================================
+   PLAYER SELECTION
+   ========================================================= */
+
 .player-selection-button {
     width: 100%;
 
-    height: 50px;
-    min-height: 50px;
+    height: 48px;
+    min-height: 48px;
 
     margin-bottom: 6px;
 
@@ -175,7 +240,7 @@
     border-width: 1px;
     border-color: rgb(61, 65, 76);
 
-    color: rgb(230, 233, 238);
+    color: rgb(232, 234, 239);
 
     font-size: 11px;
 
@@ -183,13 +248,88 @@
 }
 
 .player-selection-button:hover {
-    background-color: rgb(57, 61, 72);
+    background-color: rgb(55, 59, 70);
 }
 
-.player-list-placeholder {
-    font-size: 13px;
 
-    color: rgb(145, 150, 163);
+/* =========================================================
+   BENCH
+   ========================================================= */
+
+.bench-section {
+    flex-shrink: 0;
+
+    height: 84px;
+
+    margin-top: 12px;
+
+    padding-left: 14px;
+    padding-right: 14px;
+    padding-top: 9px;
+    padding-bottom: 9px;
+
+    background-color: rgb(22, 24, 30);
+
+    border-width: 1px;
+    border-color: rgb(48, 51, 60);
+}
+
+.bench-header {
+    flex-direction: row;
+    align-items: center;
+
+    margin-bottom: 7px;
+}
+
+.bench-title {
+    font-size: 11px;
+
+    color: rgb(230, 232, 237);
+
+    -unity-font-style: bold;
+}
+
+.bench-count {
+    margin-left: 8px;
+
+    font-size: 10px;
+
+    color: rgb(130, 135, 148);
+}
+
+.bench-container {
+    flex-grow: 1;
+
+    min-height: 0;
+
+    flex-direction: row;
+}
+
+.bench-player {
+    width: 150px;
+
+    min-width: 150px;
+
+    height: 40px;
+
+    min-height: 40px;
+
+    margin-right: 7px;
+
+    background-color: rgb(38, 41, 49);
+
+    border-width: 1px;
+    border-color: rgb(59, 63, 73);
+
+    color: rgb(224, 227, 233);
+
+    font-size: 10px;
+
+    -unity-font-style: bold;
+}
+
+.bench-player:hover {
+    background-color: rgb(53, 57, 67);
 }
 
 
@@ -200,30 +340,32 @@
 .footer {
     flex-shrink: 0;
 
-    align-items: flex-end;
+    height: 48px;
 
-    height: 55px;
+    margin-top: 10px;
 
-    margin-top: 15px;
+    flex-direction: row;
+    justify-content: flex-end;
+    align-items: center;
 }
 
 .start-button {
-    width: 190px;
+    width: 170px;
 
-    height: 42px;
+    height: 40px;
 
-    background-color: rgb(49, 54, 66);
+    background-color: rgb(50, 56, 70);
 
     border-width: 1px;
-    border-color: rgb(77, 82, 96);
+    border-color: rgb(76, 82, 98);
 
     color: rgb(242, 244, 247);
 
-    font-size: 12px;
+    font-size: 11px;
 
     -unity-font-style: bold;
 }
 
 .start-button:hover {
-    background-color: rgb(63, 68, 81);
+    background-color: rgb(64, 70, 85);
 }

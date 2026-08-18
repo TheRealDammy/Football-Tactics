@@ -110,9 +110,7 @@ namespace FootballTactics.Simulation
             if (HomeSubstitutionsUsed >= 5)
                 return false;
 
-            if (!homeTeam.MakeSubstitution(
-                playerOn,
-                playerOff))
+            if (!homeTeam.MakeSubstitution(playerOn, playerOff))
             {
                 return false;
             }
@@ -123,10 +121,30 @@ namespace FootballTactics.Simulation
             if (State.Minute >= 90)
                 return false;
 
+            Player newPlayer =
+                homeTeam.Players.Find(
+                    p => p.Name == playerOn);
+
+            Player oldPlayer =
+                homeTeam.SubstitutedPlayers.Find(
+                    p => p.Name == playerOff);
+
+            if (newPlayer == null ||
+                oldPlayer == null)
+            {
+                return false;
+            }
+
+            homeLineup.ReplacePlayer(
+                oldPlayer,
+                newPlayer);
+
             HomeSubstitutionsUsed++;
 
             State.AddEvent(
-                $"{homeTeam.Name}: {playerOff} OFF, {playerOn} ON");
+                $"{homeTeam.Name}: " +
+                $"{playerOff} OFF, " +
+                $"{playerOn} ON");
 
             return true;
         }
@@ -195,14 +213,14 @@ namespace FootballTactics.Simulation
         private void UpdatePossession()
         {
             float homeMidfield =
-                homeTeam.AverageMidfield *
-                homeTeam.GetRolePossessionImpact() *
+                homeTeam.GetAverageMidfield(homeLineup) *
+                homeTeam.GetRolePossessionImpact(homeLineup) *
                 homeTactics.Formation.GetMidfieldModifier() *
                 homeTactics.GetPossessionModifier();
 
             float awayMidfield =
-                awayTeam.AverageMidfield *
-                awayTeam.GetRolePossessionImpact() *
+                awayTeam.GetAverageMidfield(awayLineup) *
+                awayTeam.GetRolePossessionImpact(awayLineup) *
                 awayTactics.Formation.GetMidfieldModifier() *
                 awayTactics.GetPossessionModifier();
 
@@ -293,22 +311,33 @@ namespace FootballTactics.Simulation
             TacticalSettings attackingTactics,
             bool isHome)
         {
+            Lineup attackingLineup =
+                attackingTeam == homeTeam
+                    ? homeLineup
+                    : awayLineup;
+
+            Lineup defendingLineup =
+                defendingTeam == homeTeam
+                    ? homeLineup
+                    : awayLineup;
+
             float attackingStrength =
-                attackingTeam.AverageAttack *
-                attackingTeam.GetRoleAttackImpact() *
+                attackingTeam.GetAverageAttack(attackingLineup) *
+                attackingTeam.GetRoleAttackImpact(attackingLineup) *
                 attackingTactics.Formation.GetAttackModifier() *
                 attackingTactics.GetAttackModifier();
 
             float defendingStrength =
-                defendingTeam.AverageDefence *
-                defendingTeam.GetRoleDefenceImpact() *
+                defendingTeam.GetAverageDefence(defendingLineup) *
+                defendingTeam.GetRoleDefenceImpact(defendingLineup) *
                 defendingTacticsModifier(defendingTeam);
 
             float pressingEffect =
                 attackingTactics.GetPressingModifier();
 
-            float fitnessEffect =  
-                attackingTeam.AverageFitness / 100f;
+            float fitnessEffect =
+                attackingTeam
+                    .GetAverageFitness(attackingLineup) / 100f;
 
             // Tired teams become significantly less effective.
             if (attackingTeam.AverageFitness < 70f)

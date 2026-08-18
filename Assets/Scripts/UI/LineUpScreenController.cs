@@ -24,6 +24,7 @@ namespace FootballTactics.UI
 
         private VisualElement lineupContainer;
         private VisualElement playerListContainer;
+        private VisualElement benchContainer;
 
         private Button startMatchButton;
 
@@ -70,6 +71,9 @@ namespace FootballTactics.UI
             startMatchButton =
                 root.Q<Button>(
                     "startMatchButton");
+
+            benchContainer =
+                root.Q<VisualElement>("benchContainer");
         }
 
         private void RegisterEvents()
@@ -98,7 +102,7 @@ namespace FootballTactics.UI
 
             Lineup lineup =
                 LineupBuilder.BuildRecommendedLineup(
-                    matchSimulator.Engine.HomeTeam,
+                    matchSimulator.HomeTeam,
                     currentFormation);
 
             FormationDefinition definition =
@@ -125,14 +129,36 @@ namespace FootballTactics.UI
                     SelectSlot(slotView);
                 };
 
+                PositionSlotButton(button,slot);
+
                 lineupContainer.Add(button);
 
                 slotViews.Add(slotView);
             }
 
             BuildPlayerList();
-
+            BuildBench();
             UpdateFormationLabel();
+        }
+
+        private void BuildBench()
+        {
+            benchContainer.Clear();
+
+            foreach (Player player in matchSimulator.HomeTeam.Bench)
+            {
+                Button button =
+                    new();
+
+                button.text =
+                    $"{player.Name}  •  " +
+                    $"{FormatPosition(player.Position)}  •  " +
+                    $"{player.Fitness}%";
+
+                button.AddToClassList("bench-player");
+
+                benchContainer.Add(button);
+            }
         }
 
         private void SelectSlot(
@@ -181,7 +207,7 @@ namespace FootballTactics.UI
 
             foreach (
                 Player player
-                in matchSimulator.Engine.HomeTeam.Players)
+                in matchSimulator.HomeTeam.Players)
             {
                 if (player.Position !=
                     selectedSlot.RequiredPosition)
@@ -197,6 +223,20 @@ namespace FootballTactics.UI
                 playerListContainer.Add(
                     button);
             }
+        }
+
+        private void PositionSlotButton(Button button, FormationSlot slot)
+        {
+            button.style.left =
+                Length.Percent(slot.X);
+
+            button.style.top =
+                Length.Percent(slot.Y);
+
+            button.style.translate =
+                new Translate(
+                    Length.Percent(-50),
+                    Length.Percent(-50));
         }
 
         private Button CreatePlayerButton(
@@ -330,6 +370,18 @@ namespace FootballTactics.UI
 
                 _ =>
                     "4-3-3"
+            };
+        }
+
+        private static string FormatPosition(PlayerPosition position)
+        {
+            return position switch
+            {
+                PlayerPosition.Goalkeeper => "GK",
+                PlayerPosition.Defender => "DEF",
+                PlayerPosition.Midfielder => "MID",
+                PlayerPosition.Attacker => "ATT",
+                _ => position.ToString()
             };
         }
     }

@@ -109,11 +109,63 @@ namespace FootballTactics.Teams
             }
         }
 
-        public float GetRoleAttackImpact()
+        public IEnumerable<Player> GetStartingPlayers(Lineup lineup)
         {
+            return lineup.Assignments.Values.Distinct();
+        }
+
+        public float GetAverageAttack(Lineup lineup)
+        {
+            return (float)GetStartingPlayers(lineup)
+                .Select(p => p.Attack)
+                .DefaultIfEmpty()
+                .Average();
+        }
+
+        public float GetAverageDefence(Lineup lineup)
+        {
+            return (float)GetStartingPlayers(lineup)
+                .Select(p => p.Defence)
+                .DefaultIfEmpty()
+                .Average();
+        }
+
+        public float GetAverageMidfield(Lineup lineup)
+        {
+            return GetStartingPlayers(lineup)
+                .Where(p =>
+                    p.Position == PlayerPosition.Midfielder)
+                .Select(p => (p.Passing + p.Defence) / 2f)
+                .DefaultIfEmpty()
+                .Average();
+        }
+
+        public float GetAveragePace(Lineup lineup)
+        {
+            return (float)GetStartingPlayers(lineup)
+                .Select(p => p.Pace)
+                .DefaultIfEmpty()
+                .Average();
+        }
+
+        public float GetAverageFitness(Lineup lineup)
+        {
+            return (float)GetStartingPlayers(lineup)
+                .Select(p => p.Fitness)
+                .DefaultIfEmpty()
+                .Average();
+        }
+
+        public float GetRoleAttackImpact(Lineup lineup)
+        {
+            var players = GetStartingPlayers(lineup).ToList();
+
+            if (players.Count == 0)
+                return 1f;
+
             float total = 0f;
 
-            foreach (Player player in Players)
+            foreach (Player player in players)
             {
                 total += player.Role switch
                 {
@@ -127,7 +179,6 @@ namespace FootballTactics.Teams
 
                     PlayerRole.CentreBack => 0.45f,
                     PlayerRole.FullBack => 0.65f,
-
                     PlayerRole.Sweeper => 0.50f,
                     PlayerRole.LineHolding => 0.40f,
 
@@ -137,14 +188,19 @@ namespace FootballTactics.Teams
                 };
             }
 
-            return total / Players.Count;
+            return total / players.Count;
         }
 
-        public float GetRoleDefenceImpact()
+        public float GetRoleDefenceImpact(Lineup lineup)
         {
+            var players = GetStartingPlayers(lineup).ToList();
+
+            if (players.Count == 0)
+                return 1f;
+
             float total = 0f;
 
-            foreach (Player player in Players)
+            foreach (Player player in players)
             {
                 total += player.Role switch
                 {
@@ -167,14 +223,19 @@ namespace FootballTactics.Teams
                 };
             }
 
-            return total / Players.Count;
+            return total / players.Count;
         }
 
-        public float GetRolePossessionImpact()
+        public float GetRolePossessionImpact(Lineup lineup)
         {
+            var players = GetStartingPlayers(lineup).ToList();
+
+            if (players.Count == 0)
+                return 1f;
+
             float total = 0f;
 
-            foreach (Player player in Players)
+            foreach (Player player in players)
             {
                 total += player.Role switch
                 {
@@ -195,7 +256,7 @@ namespace FootballTactics.Teams
                 };
             }
 
-            return total / Players.Count;
+            return total / players.Count;
         }
     }
 }

@@ -1,8 +1,9 @@
-using FootballTactics.Teams;
-using FootballTactics.UI;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
+
+using FootballTactics.Teams;
+using FootballTactics.UI;
 
 namespace FootballTactics.Simulation
 {
@@ -17,6 +18,9 @@ namespace FootballTactics.Simulation
 
         public MatchEngine Engine => matchEngine;
 
+        public Team HomeTeam => homeTeam;
+        public Team AwayTeam => awayTeam;
+
         public bool HasMatch =>
             matchEngine != null;
 
@@ -24,24 +28,30 @@ namespace FootballTactics.Simulation
         {
             input = new FootballTacticsInputActions();
 
-            input.Match.AdvanceMinute.performed += OnAdvanceMinute;
+            input.Match.AdvanceMinute.performed +=
+                OnAdvanceMinute;
+
+            InitializeTeams();
         }
 
-        private void Start()
-        {
-            // Nothing is started here anymore.
-            // The lineup screen starts the match.
-        }
-
-        public void StartConfiguredMatch(
-            Formation formation,
-            IReadOnlyList<LineupSlotView> slotViews)
+        private void InitializeTeams()
         {
             homeTeam =
                 TeamFactory.CreateHomeTeam();
 
             awayTeam =
                 TeamFactory.CreateAwayTeam();
+        }
+
+        public void StartConfiguredMatch(
+            Formation formation,
+            IReadOnlyList<LineupSlotView> slotViews)
+        {
+            if (homeTeam == null ||
+                awayTeam == null)
+            {
+                InitializeTeams();
+            }
 
             TacticalSettings homeTactics =
                 new()
@@ -61,7 +71,6 @@ namespace FootballTactics.Simulation
                     DefensiveLine = DefensiveLine.Normal
                 };
 
-            // Build the lineup using THIS team.
             Lineup homeLineup =
                 new(formation);
 
@@ -167,10 +176,13 @@ namespace FootballTactics.Simulation
 
         private void OnDestroy()
         {
-            input.Match.AdvanceMinute.performed -=
-                OnAdvanceMinute;
+            if (input != null)
+            {
+                input.Match.AdvanceMinute.performed -=
+                    OnAdvanceMinute;
 
-            input.Dispose();
+                input.Dispose();
+            }
         }
     }
 }

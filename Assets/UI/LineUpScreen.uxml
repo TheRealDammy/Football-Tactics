@@ -2,19 +2,31 @@
     <Style src="project://database/Assets/UI/LineUpScreen.uss?fileID=7433441132597879392&amp;guid=59950ad349bab0c439230bdea5c6f452&amp;type=3#LineUpScreen"/>
     <ui:VisualElement name="root" class="root">
         <ui:VisualElement class="header">
-            <ui:Label text="TEAM SELECTION" class="title"/>
-            <ui:Label name="formationSummaryLabel" text="FORMATION  4-3-3" class="formation-summary"/>
-        </ui:VisualElement>
-        <ui:VisualElement class="toolbar">
-            <ui:Label text="FORMATION" class="toolbar-label"/>
-            <ui:DropdownField name="formationDropdown" choices="4-4-2,4-3-3,4-2-3-1" value="4-3-3" class="formation-dropdown"/>
+            <ui:VisualElement>
+                <ui:Label text="TEAM SELECTION" class="title"/>
+                <ui:Label text="RIVERSIDE FC" class="club-name"/>
+            </ui:VisualElement>
+            <ui:VisualElement class="formation-control">
+                <ui:Label name="formationSummaryLabel" text="4-3-3" class="formation-label"/>
+                <ui:DropdownField name="formationDropdown" choices="4-4-2,4-3-3,4-2-3-1" value="4-3-3" class="formation-dropdown"/>
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement class="main">
-            <ui:VisualElement name="lineupContainer" class="lineup-container"/>
-            <ui:VisualElement class="player-panel">
-                <ui:Label text="SQUAD" class="section-title"/>
-                <ui:VisualElement name="playerListContainer" class="player-list-container"/>
+            <ui:VisualElement name="pitch" class="pitch">
+                <ui:VisualElement name="lineupContainer" class="lineup-container"/>
             </ui:VisualElement>
+            <ui:VisualElement name="playerPanel" class="player-panel">
+                <ui:Label name="playerPanelTitle" text="SELECT A PLAYER" class="section-title"/>
+                <ui:Label name="playerPanelSubtitle" text="Choose a position on the pitch." class="panel-subtitle"/>
+                <ui:ScrollView name="playerListContainer" vertical-scroller-visibility="auto" horizontal-scroller-visibility="hidden" class="player-list-container"/>
+            </ui:VisualElement>
+        </ui:VisualElement>
+        <ui:VisualElement class="bench-section">
+            <ui:VisualElement class="bench-header">
+                <ui:Label text="BENCH" class="bench-title"/>
+                <ui:Label text="6 substitutes" class="bench-count"/>
+            </ui:VisualElement>
+            <ui:ScrollView name="benchContainer" horizontal-scroller-visibility="hidden" vertical-scroller-visibility="hidden" class="bench-container"/>
         </ui:VisualElement>
         <ui:VisualElement class="footer">
             <ui:Button name="startMatchButton" text="START MATCH" class="start-button"/>
