@@ -1,0 +1,674 @@
+/* ================================================================
+   GLOBAL
+   ================================================================ */
+
+.root {
+    flex-grow: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    background-color: rgb(13, 14, 18);
+
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+
+    color: rgb(235, 237, 242);
+}
+
+
+/* ================================================================
+   HEADER
+   ================================================================ */
+
+.header {
+    flex-shrink: 0;
+
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+
+    height: 90px;
+
+    border-bottom-width: 1px;
+    border-bottom-color: rgb(48, 51, 60);
+
+    margin-bottom: 16px;
+}
+
+.team-block {
+    width: 40%;
+
+    justify-content: center;
+}
+
+.home-team {
+    align-items: flex-start;
+}
+
+.away-team {
+    align-items: flex-end;
+}
+
+.team-name {
+    font-size: 27px;
+
+    color: rgb(244, 245, 248);
+
+    -unity-font-style: bold;
+}
+
+.score-block {
+    width: 20%;
+
+    align-items: center;
+    justify-content: center;
+}
+
+.score {
+    font-size: 44px;
+
+    color: rgb(255, 255, 255);
+
+    -unity-font-style: bold;
+}
+
+.clock {
+    margin-top: 1px;
+
+    font-size: 17px;
+
+    color: rgb(160, 165, 177);
+}
+
+
+/* ================================================================
+   STAT CARDS
+   ================================================================ */
+
+.stats {
+    flex-shrink: 0;
+
+    flex-direction: row;
+
+    height: 78px;
+
+    margin-bottom: 16px;
+}
+
+.stat-card {
+    flex-grow: 1;
+
+    min-width: 0;
+
+    margin-right: 10px;
+
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+    justify-content: center;
+
+    background-color: rgb(24, 26, 32);
+
+    border-width: 1px;
+    border-color: rgb(47, 50, 59);
+}
+
+.stat-card.last-card {
+    margin-right: 0;
+}
+
+.stat-title {
+    font-size: 11px;
+
+    color: rgb(145, 150, 163);
+
+    -unity-font-style: bold;
+}
+
+.stat-value {
+    margin-top: 5px;
+
+    font-size: 21px;
+
+    color: rgb(239, 241, 245);
+
+    -unity-font-style: bold;
+}
+
+
+/* ================================================================
+   MAIN CONTENT
+   ================================================================ */
+
+.content {
+    flex-grow: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    flex-direction: row;
+}
+
+.events-panel {
+    flex-grow: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    margin-right: 16px;
+
+    padding: 18px;
+
+    background-color: rgb(22, 24, 30);
+
+    border-width: 1px;
+    border-color: rgb(47, 50, 59);
+}
+
+
+/* ================================================================
+   EVENT FEED
+   ================================================================ */
+
+.section-title {
+    flex-shrink: 0;
+
+    margin-bottom: 14px;
+
+    font-size: 17px;
+
+    color: rgb(242, 244, 247);
+
+    -unity-font-style: bold;
+}
+
+.event-list {
+    flex-grow: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    padding-right: 4px;
+}
+
+.event-list Label {
+    margin-bottom: 9px;
+
+    font-size: 14px;
+
+    color: rgb(204, 208, 217);
+
+    white-space: normal;
+}
+
+
+/* ================================================================
+   RIGHT COLUMN
+   ================================================================ */
+
+.right-column {
+    width: 350px;
+
+    min-width: 350px;
+    max-width: 350px;
+
+    flex-shrink: 0;
+
+    min-height: 0;
+}
+
+
+/* ================================================================
+   TACTICS PANEL
+   ================================================================ */
+
+.tactics-panel {
+    width: 100%;
+
+    padding: 18px;
+
+    background-color: rgb(22, 24, 30);
+
+    border-width: 1px;
+    border-color: rgb(47, 50, 59);
+}
+
+
+/* ================================================================
+   CURRENT TACTICS
+   ================================================================ */
+
+.current-tactics {
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+    margin-bottom: 13px;
+
+    background-color: rgb(28, 30, 37);
+
+    border-width: 1px;
+    border-color: rgb(51, 54, 63);
+}
+
+.current-row {
+    flex-direction: row;
+
+    justify-content: space-between;
+    align-items: center;
+
+    min-height: 24px;
+
+    margin-bottom: 4px;
+}
+
+.current-row.last-row {
+    margin-bottom: 0;
+}
+
+.current-label {
+    font-size: 10px;
+
+    color: rgb(135, 140, 153);
+
+    -unity-font-style: bold;
+}
+
+.current-value {
+    font-size: 12px;
+
+    color: rgb(221, 224, 231);
+
+    -unity-font-style: bold;
+}
+
+
+/* ================================================================
+   TACTICAL BUTTONS
+   ================================================================ */
+
+.sub-title {
+    flex-shrink: 0;
+
+    margin-top: 10px;
+    margin-bottom: 6px;
+
+    font-size: 10px;
+
+    color: rgb(139, 144, 157);
+
+    -unity-font-style: bold;
+}
+
+.button-row {
+    flex-direction: row;
+
+    width: 100%;
+    height: 34px;
+
+    min-height: 34px;
+}
+
+.tactical-button {
+    flex-grow: 1;
+
+    width: auto;
+    height: 34px;
+
+    min-height: 34px;
+
+    margin-left: 0;
+    margin-right: 5px;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    padding-left: 4px;
+    padding-right: 4px;
+
+    background-color: rgb(42, 45, 54);
+
+    border-width: 1px;
+    border-color: rgb(67, 71, 82);
+
+    color: rgb(232, 234, 239);
+
+    font-size: 10px;
+
+    -unity-font-style: bold;
+}
+
+.tactical-button.last-button {
+    margin-right: 0;
+}
+
+.tactical-button:hover {
+    background-color: rgb(55, 59, 70);
+}
+
+.tactical-button:active {
+    background-color: rgb(67, 72, 85);
+}
+
+
+/* ================================================================
+   SUBSTITUTION BUTTON
+   ================================================================ */
+
+.substitution-button {
+    width: 100%;
+
+    height: 38px;
+    min-height: 38px;
+
+    margin-top: 17px;
+    margin-bottom: 0;
+
+    background-color: rgb(46, 49, 59);
+
+    border-width: 1px;
+    border-color: rgb(73, 77, 90);
+
+    color: rgb(240, 241, 245);
+
+    font-size: 11px;
+
+    -unity-font-style: bold;
+}
+
+.substitution-button:hover {
+    background-color: rgb(59, 63, 74);
+}
+
+.substitution-button:active {
+    background-color: rgb(71, 76, 89);
+}
+
+
+/* ================================================================
+   SHARED OVERLAY
+   ================================================================ */
+
+.overlay {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(5, 6, 9, 0.84);
+
+    display: none;
+}
+
+
+/* ================================================================
+   SUBSTITUTION DIALOG
+   ================================================================ */
+
+.dialog {
+    width: 700px;
+    max-width: 82%;
+
+    min-height: 0;
+
+    padding-left: 22px;
+    padding-right: 22px;
+    padding-top: 20px;
+    padding-bottom: 20px;
+
+    background-color: rgb(23, 25, 31);
+
+    border-width: 1px;
+    border-color: rgb(72, 76, 88);
+}
+
+.dialog-header {
+    flex-shrink: 0;
+
+    margin-bottom: 14px;
+}
+
+.dialog-title {
+    font-size: 24px;
+
+    color: rgb(246, 247, 250);
+
+    -unity-font-style: bold;
+}
+
+.dialog-subtitle {
+    margin-top: 4px;
+
+    font-size: 12px;
+
+    color: rgb(150, 155, 167);
+}
+
+
+/* ================================================================
+   SUBSTITUTION PLAYER COLUMNS
+   ================================================================ */
+
+.substitution-columns {
+    flex-direction: row;
+
+    width: 100%;
+    height: 270px;
+
+    min-height: 270px;
+}
+
+.player-column {
+    flex-grow: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    padding: 11px;
+
+    background-color: rgb(29, 31, 38);
+
+    border-width: 1px;
+    border-color: rgb(52, 55, 65);
+}
+
+.player-column:first-child {
+    margin-right: 8px;
+}
+
+.column-title {
+    flex-shrink: 0;
+
+    margin-bottom: 8px;
+
+    font-size: 10px;
+
+    color: rgb(144, 149, 161);
+
+    -unity-font-style: bold;
+}
+
+.player-list {
+    flex-grow: 1;
+
+    min-width: 0;
+    min-height: 0;
+
+    padding-right: 2px;
+}
+
+
+/* ================================================================
+   PLAYER BUTTONS
+   ================================================================ */
+
+.player-button {
+    width: 100%;
+
+    height: 48px;
+    min-height: 48px;
+
+    margin-left: 0;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 5px;
+
+    padding-left: 10px;
+    padding-right: 10px;
+
+    background-color: rgb(41, 44, 53);
+
+    border-width: 1px;
+    border-color: rgb(61, 65, 76);
+
+    color: rgb(231, 233, 238);
+
+    font-size: 11px;
+
+    -unity-font-style: bold;
+}
+
+.player-button:hover {
+    background-color: rgb(55, 59, 69);
+}
+
+.player-button:active {
+    background-color: rgb(68, 73, 86);
+}
+
+.selected-player {
+    background-color: rgb(67, 73, 87);
+
+    border-color: rgb(103, 109, 126);
+}
+
+
+/* ================================================================
+   SELECTED SUBSTITUTION
+   ================================================================ */
+
+.selected-substitution {
+    flex-shrink: 0;
+
+    height: 32px;
+    min-height: 32px;
+
+    margin-top: 12px;
+    margin-bottom: 10px;
+
+    font-size: 12px;
+
+    color: rgb(210, 213, 220);
+
+    -unity-font-style: bold;
+}
+
+
+/* ================================================================
+   DIALOG BUTTONS
+   ================================================================ */
+
+.dialog-buttons {
+    flex-shrink: 0;
+
+    flex-direction: row;
+
+    justify-content: flex-end;
+}
+
+.dialog-button {
+    width: 120px;
+
+    height: 36px;
+    min-height: 36px;
+
+    margin-left: 7px;
+    margin-right: 0;
+    margin-top: 0;
+    margin-bottom: 0;
+
+    background-color: rgb(45, 48, 58);
+
+    border-width: 1px;
+    border-color: rgb(70, 74, 87);
+
+    color: rgb(235, 237, 242);
+
+    font-size: 11px;
+
+    -unity-font-style: bold;
+}
+
+.secondary-button {
+    background-color: rgb(35, 38, 46);
+}
+
+.confirm-button {
+    background-color: rgb(53, 58, 70);
+}
+
+.dialog-button:hover {
+    background-color: rgb(63, 68, 80);
+}
+
+
+/* ================================================================
+   FULL TIME OVERLAY
+   ================================================================ */
+
+.full-time-overlay {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(5, 6, 9, 0.86);
+
+    display: none;
+}
+
+.full-time-dialog {
+    align-items: center;
+    justify-content: center;
+
+    padding-left: 45px;
+    padding-right: 45px;
+    padding-top: 30px;
+    padding-bottom: 30px;
+
+    background-color: rgb(23, 25, 31);
+
+    border-width: 1px;
+    border-color: rgb(72, 76, 88);
+}
+
+.full-time {
+    font-size: 46px;
+
+    color: rgb(250, 251, 253);
+
+    -unity-font-style: bold;
+}
+
+.full-time-subtitle {
+    margin-top: 5px;
+
+    font-size: 13px;
+
+    color: rgb(151, 156, 168);
+}

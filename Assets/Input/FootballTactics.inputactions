@@ -1,0 +1,36 @@
+{
+    "version": 1,
+    "name": "FootballTactics",
+    "maps": [
+        {
+            "name": "Match",
+            "id": "db405f27-98af-448b-a7b8-f57aedba0dca",
+            "actions": [
+                {
+                    "name": "AdvanceMinute",
+                    "type": "Button",
+                    "id": "801ed436-ed40-4418-846f-7e73890c2a62",
+                    "expectedControlType": "",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false,
+                    "priority": 0
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "435a188a-93e2-4fbf-a11c-b8bfc2b45f2e",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "AdvanceMinute",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}
