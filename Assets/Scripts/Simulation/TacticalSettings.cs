@@ -79,10 +79,10 @@ namespace FootballTactics.Simulation
         {
             return Pressing switch
             {
-                Pressing.Low => 0.02f,
-                Pressing.Medium => 0.04f,
-                Pressing.High => 0.07f,
-                _ => 0.04f
+                Pressing.Low => 0.6f,
+                Pressing.Medium => 1.0f,
+                Pressing.High => 1.5f,
+                _ => 1.0f
             };
         }
 
@@ -93,6 +93,28 @@ namespace FootballTactics.Simulation
                 DefensiveLine.Deep => 0.85f,
                 DefensiveLine.Normal => 1.00f,
                 DefensiveLine.High => 1.18f,
+                _ => 1.00f
+            };
+        }
+
+        public float GetCounterAttackVulnerability()
+        {
+            return DefensiveLine switch
+            {
+                DefensiveLine.Deep => 0.75f,
+                DefensiveLine.Normal => 1.00f,
+                DefensiveLine.High => 1.20f,
+                _ => 1.00f
+            };
+        }
+
+        public float GetTerritoryModifier()
+        {
+            return DefensiveLine switch
+            {
+                DefensiveLine.Deep => 0.94f,
+                DefensiveLine.Normal => 1.00f,
+                DefensiveLine.High => 1.06f,
                 _ => 1.00f
             };
         }

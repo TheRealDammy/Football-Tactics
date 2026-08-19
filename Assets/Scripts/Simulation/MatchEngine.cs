@@ -226,13 +226,15 @@ namespace FootballTactics.Simulation
                 homeTeam.GetAverageMidfield(homeLineup) *
                 homeTeam.GetRolePossessionImpact(homeLineup) *
                 homeTactics.Formation.GetMidfieldModifier() *
-                homeTactics.GetPossessionModifier();
+                homeTactics.GetPossessionModifier() *
+                homeTactics.GetTerritoryModifier();
 
             float awayMidfield =
                 awayTeam.GetAverageMidfield(awayLineup) *
                 awayTeam.GetRolePossessionImpact(awayLineup) *
                 awayTactics.Formation.GetMidfieldModifier() *
-                awayTactics.GetPossessionModifier();
+                awayTactics.GetPossessionModifier() *
+                awayTactics.GetTerritoryModifier();
 
             float total = homeMidfield + awayMidfield;
 
@@ -285,16 +287,13 @@ namespace FootballTactics.Simulation
 
         private void SimulateAttacks(float homePossession)
         {
-            // More than one attacking sequence can happen in a minute.
             int attackCount = Random.Range(0, 3);
 
             for (int i = 0; i < attackCount; i++)
             {
-                float homeAttackProbability =
-                    homePossession / 100f;
-
                 bool homeAttack =
-                    Random.value < homeAttackProbability;
+                    Random.value <
+                    homePossession / 100f;
 
                 if (homeAttack)
                 {
@@ -315,11 +314,7 @@ namespace FootballTactics.Simulation
             }
         }
 
-        private void SimulateAttack(
-            Team attackingTeam,
-            Team defendingTeam,
-            TacticalSettings attackingTactics,
-            bool isHome)
+        private void SimulateAttack(Team attackingTeam, Team defendingTeam, TacticalSettings attackingTactics, bool isHome)
         {
             Lineup attackingLineup =
                 attackingTeam == homeTeam
@@ -348,6 +343,9 @@ namespace FootballTactics.Simulation
             float fitnessEffect =
                 attackingTeam
                     .GetAverageFitness(attackingLineup) / 100f;
+
+            bool isCounterAttack =
+                Random.value < 0.12f;
 
             // Tired teams become significantly less effective.
             if (attackingTeam.AverageFitness < 70f)
@@ -393,23 +391,25 @@ namespace FootballTactics.Simulation
 
                 State.AddEvent(
                     $"Shot — {awayTeam.Name} ({xG:F2} xG)");
-            }
+            }          
 
             float goalProbability = xG;
 
-            // A high defensive line creates additional risk.
-            if (defendingTeam == homeTeam &&
-                homeTactics.DefensiveLine == DefensiveLine.High)
+            if (isCounterAttack)
             {
-                goalProbability +=
-                    attackingTeam.AveragePace / 1000f;
-            }
+                float counterModifier =
+                    CalculateCounterAttackModifier(
+                        attackingTeam,
+                        defendingTeam);
 
-            if (defendingTeam == awayTeam &&
-                awayTactics.DefensiveLine == DefensiveLine.High)
-            {
-                goalProbability +=
-                    attackingTeam.AveragePace / 1000f;
+                chanceQuality *= counterModifier;
+
+                if (counterModifier > 1.05f)
+                {
+                    State.AddEvent(
+                        $"{attackingTeam.Name} break quickly " +
+                        "behind the defensive line.");
+                }
             }
 
             if (Random.value < goalProbability)
@@ -431,6 +431,34 @@ namespace FootballTactics.Simulation
             }
         }
 
+        private float CalculateCounterAttackModifier(Team attackingTeam, Team defendingTeam)
+        {
+            DefensiveLine defensiveLine =
+                defendingTeam == homeTeam
+                    ? homeTactics.DefensiveLine
+                    : awayTactics.DefensiveLine;
+
+            float vulnerability =
+                defendingTeam == homeTeam
+                    ? homeTactics.GetCounterAttackVulnerability()
+                    : awayTactics.GetCounterAttackVulnerability();
+
+            float pace =
+                defendingTeam == homeTeam
+                    ? attackingTeam.GetAveragePace(
+                        awayLineup)
+                    : attackingTeam.GetAveragePace(
+                        homeLineup);
+
+            float paceFactor =
+                Mathf.Clamp(
+                    pace / 100f,
+                    0.6f,
+                    1.0f);
+
+            return vulnerability * paceFactor;
+        }
+
         private float defendingTacticsModifier(Team team)
         {
             if (team == homeTeam)
@@ -444,21 +472,20 @@ namespace FootballTactics.Simulation
         }
         private void ApplyFatigue()
         {
-            // High pressing costs more energy.
-            float homeDrain =
-                homeTactics.GetFitnessDrain();
+            if (State.Minute % 5 != 0)
+                return;
 
-            float awayDrain =
-                awayTactics.GetFitnessDrain();
+            int baseDrain = 1;
 
-            if (State.Minute % 5 == 0)
-            {
-                homeTeam.ReduceFitness(
-                    Mathf.CeilToInt(homeDrain * 10f));
+            homeTeam.ReduceFitness(
+                baseDrain,
+                homeLineup,
+                homeTactics.Pressing);
 
-                awayTeam.ReduceFitness(
-                    Mathf.CeilToInt(awayDrain * 10f));
-            }
+            awayTeam.ReduceFitness(
+                baseDrain,
+                awayLineup,
+                awayTactics.Pressing);
         }
 
         private MatchSituation GenerateSituation(

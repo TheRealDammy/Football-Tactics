@@ -4,8 +4,7 @@ namespace FootballTactics.Teams
 {
     public static class RoleBehaviour
     {
-        public static float BuildUpContribution(
-            PlayerRole role)
+        public static float BuildUpContribution(PlayerRole role)
         {
             return role switch
             {
@@ -26,8 +25,7 @@ namespace FootballTactics.Teams
             };
         }
 
-        public static float ChanceCreationContribution(
-            PlayerRole role)
+        public static float ChanceCreationContribution(PlayerRole role)
         {
             return role switch
             {
@@ -48,8 +46,7 @@ namespace FootballTactics.Teams
             };
         }
 
-        public static float PressingContribution(
-            PlayerRole role)
+        public static float PressingContribution(PlayerRole role)
         {
             return role switch
             {
@@ -70,8 +67,7 @@ namespace FootballTactics.Teams
             };
         }
 
-        public static float DefensiveContribution(
-            PlayerRole role)
+        public static float DefensiveContribution(PlayerRole role)
         {
             return role switch
             {
@@ -89,6 +85,30 @@ namespace FootballTactics.Teams
                 PlayerRole.Striker => 0.03f,
 
                 _ => 0.05f
+            };
+        }
+
+        public static float FitnessCost(PlayerRole role)
+        {
+            return role switch
+            {
+                PlayerRole.BoxToBox => 1.35f,
+                PlayerRole.Winger => 1.20f,
+                PlayerRole.Striker => 1.10f,
+
+                PlayerRole.CentralMidfielder => 1.05f,
+                PlayerRole.Playmaker => 1.00f,
+                PlayerRole.DefensiveMidfielder => 1.05f,
+
+                PlayerRole.FullBack => 1.10f,
+
+                PlayerRole.CentreBack => 0.85f,
+                PlayerRole.Sweeper => 0.80f,
+                PlayerRole.LineHolding => 0.75f,
+
+                PlayerRole.Goalkeeper => 0.45f,
+
+                _ => 1.0f
             };
         }
     }

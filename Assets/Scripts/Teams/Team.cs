@@ -1,5 +1,7 @@
+using FootballTactics.Simulation;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace FootballTactics.Teams
 {
@@ -101,10 +103,30 @@ namespace FootballTactics.Teams
             return true;
         }
 
-        public void ReduceFitness(int amount)
+        public void ReduceFitness(int baseAmount,Lineup lineup, Pressing pressing)
         {
-            foreach (Player player in Players)
+            foreach (Player player
+                in GetStartingPlayers(lineup))
             {
+                float roleCost =
+                    RoleBehaviour.FitnessCost(
+                        player.Role);
+
+                float pressingMultiplier =
+                    pressing switch
+                    {
+                        Pressing.Low => 0.65f,
+                        Pressing.Medium => 1.0f,
+                        Pressing.High => 1.40f,
+                        _ => 1.0f
+                    };
+
+                int amount =
+                    Mathf.CeilToInt(
+                        baseAmount *
+                        roleCost *
+                        pressingMultiplier);
+
                 player.ReduceFitness(amount);
             }
         }
