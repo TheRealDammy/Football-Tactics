@@ -1,5 +1,6 @@
-using System.Collections.Generic;
 using FootballTactics.Simulation;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace FootballTactics.Teams
 {
@@ -22,6 +23,15 @@ namespace FootballTactics.Teams
             Player player)
         {
             assignments[slot.Id] = player;
+        }
+
+        public bool IsComplete => assignments.Count == 11;
+
+        public bool HasDuplicatePlayers()
+        {
+            return assignments.Values
+                .GroupBy(player => player)
+                .Any(group => group.Count() > 1);
         }
 
         public bool HasPlayer(Player player)

@@ -26,10 +26,11 @@
                 <ui:Label text="BENCH" class="bench-title"/>
                 <ui:Label text="6 substitutes" class="bench-count"/>
             </ui:VisualElement>
-            <ui:ScrollView name="benchContainer" horizontal-scroller-visibility="hidden" vertical-scroller-visibility="hidden" class="bench-container"/>
+            <ui:VisualElement name="benchContainer" class="bench-container" />
         </ui:VisualElement>
         <ui:VisualElement class="footer">
-            <ui:Button name="startMatchButton" text="START MATCH" class="start-button"/>
+            <ui:Button name="resetLineupButton" text="RESET XI" class="reset-button" />
+            <ui:Button name="startMatchButton" text="START MATCH" class="start-button" />
         </ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>

@@ -1,6 +1,7 @@
+using FootballTactics.Simulation;
+using FootballTactics.UI;
 using System.Collections.Generic;
 using System.Linq;
-using FootballTactics.Simulation;
 
 namespace FootballTactics.Teams
 {
@@ -73,9 +74,25 @@ namespace FootballTactics.Teams
             return bestPlayer;
         }
 
-        private static float CalculateSlotScore(
-            Player player,
-            FormationSlot slot)
+        public static Lineup BuildFromSlotViews(Formation formation, IReadOnlyList<LineupSlotView> slotViews)
+        {
+            Lineup lineup =
+                new Lineup(formation);
+
+            foreach (LineupSlotView slotView in slotViews)
+            {
+                if (slotView.Player == null)
+                    continue;
+
+                lineup.Assign(
+                    slotView.Slot,
+                    slotView.Player);
+            }
+
+            return lineup;
+        }
+
+        private static float CalculateSlotScore(Player player, FormationSlot slot)
         {
             float score = 0f;
 

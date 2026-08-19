@@ -71,26 +71,7 @@ namespace FootballTactics.Simulation
                     DefensiveLine = DefensiveLine.Normal
                 };
 
-            Lineup homeLineup =
-                new(formation);
-
-            foreach (LineupSlotView slotView in slotViews)
-            {
-                if (slotView.Player == null)
-                    continue;
-
-                Player actualPlayer =
-                    FindPlayerByName(
-                        homeTeam,
-                        slotView.Player.Name);
-
-                if (actualPlayer == null)
-                    continue;
-
-                homeLineup.Assign(
-                    slotView.Slot,
-                    actualPlayer);
-            }
+            Lineup homeLineup = LineupBuilder.BuildFromSlotViews(formation,  slotViews);
 
             matchEngine =
                 new MatchEngine(

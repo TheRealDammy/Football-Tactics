@@ -1,5 +1,6 @@
-using UnityEngine;
 using FootballTactics.Teams;
+using System.Linq;
+using UnityEngine;
 
 namespace FootballTactics.Simulation
 {
@@ -60,6 +61,15 @@ namespace FootballTactics.Simulation
 
             UpdateMomentum();
             UpdatePossession();
+
+            MatchSituation homeSituation =
+                GenerateSituation(true);
+
+            MatchSituation awaySituation =
+                GenerateSituation(false);
+
+            ProcessSituation(homeSituation);
+            ProcessSituation(awaySituation);
 
             SimulateAttacks(State.HomePossession);
 
@@ -449,6 +459,195 @@ namespace FootballTactics.Simulation
                 awayTeam.ReduceFitness(
                     Mathf.CeilToInt(awayDrain * 10f));
             }
+        }
+
+        private MatchSituation GenerateSituation(
+    bool isHome)
+        {
+            Team team =
+                isHome
+                    ? homeTeam
+                    : awayTeam;
+
+            Lineup lineup =
+                isHome
+                    ? homeLineup
+                    : awayLineup;
+
+            TacticalSettings tactics =
+                isHome
+                    ? homeTactics
+                    : awayTactics;
+
+            float buildUp =
+                team.GetBuildUpContribution(lineup);
+
+            float chanceCreation =
+                team.GetChanceCreationContribution(lineup);
+
+            float pressing =
+                team.GetPressingContribution(lineup);
+
+            float defending =
+                team.GetDefensiveContribution(lineup);
+
+            float roll =
+                Random.value;
+
+            if (roll < 0.20f)
+            {
+                return new MatchSituation(
+                    MatchSituationType.BuildUp,
+                    $"{team.Name} build patiently from the back.",
+                    isHome,
+                    buildUp);
+            }
+
+            if (roll < 0.38f)
+            {
+                return new MatchSituation(
+                    MatchSituationType.Pressing,
+                    $"{team.Name} press aggressively to win the ball.",
+                    isHome,
+                    pressing *
+                    tactics.GetPressingModifier());
+            }
+
+            if (roll < 0.56f)
+            {
+                return new MatchSituation(
+                    MatchSituationType.ChanceCreation,
+                    $"{team.Name} create an attacking opportunity.",
+                    isHome,
+                    chanceCreation *
+                    tactics.GetAttackModifier());
+            }
+
+            if (roll < 0.72f)
+            {
+                return new MatchSituation(
+                    MatchSituationType.DefensiveStand,
+                    $"{team.Name} hold their defensive shape.",
+                    isHome,
+                    defending *
+                    tactics.GetDefenceModifier());
+            }
+
+            if (roll < 0.86f)
+            {
+                return new MatchSituation(
+                    MatchSituationType.CounterAttack,
+                    $"{team.Name} launch a quick counterattack.",
+                    isHome,
+                    tactics.Formation.GetCounterModifier());
+            }
+
+            return new MatchSituation(
+                MatchSituationType.DefensiveTransition,
+                $"{team.Name} recover their shape.",
+                isHome,
+                defending);
+        }
+
+        private void ProcessSituation(MatchSituation situation)
+        {
+            if (situation.Impact <= 0f)
+                return;
+
+            Team team =
+                situation.IsHome
+                    ? homeTeam
+                    : awayTeam;
+
+            Lineup lineup =
+                situation.IsHome
+                    ? homeLineup
+                    : awayLineup;
+
+            float eventChance =
+                Mathf.Clamp(
+                    situation.Impact * 0.35f,
+                    0.02f,
+                    0.30f);
+
+            if (Random.value > eventChance)
+                return;
+
+            State.AddEvent(
+                situation.Description);
+
+            GenerateRoleSpecificEvent(
+                team,
+                lineup,
+                situation);
+        }
+
+        private void GenerateRoleSpecificEvent(Team team, Lineup lineup, MatchSituation situation)
+        {
+            var players =
+                team.GetStartingPlayers(lineup)
+                    .ToList();
+
+            if (players.Count == 0)
+                return;
+
+            PlayerRole targetRole =
+                situation.Type switch
+                {
+                    MatchSituationType.BuildUp =>
+                        PlayerRole.Playmaker,
+
+                    MatchSituationType.ChanceCreation =>
+                        PlayerRole.Winger,
+
+                    MatchSituationType.Pressing =>
+                        PlayerRole.BoxToBox,
+
+                    MatchSituationType.DefensiveStand =>
+                        PlayerRole.LineHolding,
+
+                    MatchSituationType.DefensiveTransition =>
+                        PlayerRole.Sweeper,
+
+                    _ =>
+                        PlayerRole.CentralMidfielder
+                };
+
+            Player player =
+                players
+                    .OrderByDescending(
+                        p => p.Role == targetRole)
+                    .FirstOrDefault();
+
+            if (player == null)
+                return;
+
+            if (player.Role != targetRole)
+                return;
+
+            string description =
+                situation.Type switch
+                {
+                    MatchSituationType.BuildUp =>
+                        $"{player.Name} helps dictate the build-up.",
+
+                    MatchSituationType.ChanceCreation =>
+                        $"{player.Name} finds space to create a chance.",
+
+                    MatchSituationType.Pressing =>
+                        $"{player.Name} leads the press.",
+
+                    MatchSituationType.DefensiveStand =>
+                        $"{player.Name} helps maintain the defensive shape.",
+
+                    MatchSituationType.DefensiveTransition =>
+                        $"{player.Name} provides cover behind the defence.",
+
+                    _ =>
+                        $"{player.Name} influences the phase."
+                };
+
+            State.AddEvent(description);
         }
     }
 }

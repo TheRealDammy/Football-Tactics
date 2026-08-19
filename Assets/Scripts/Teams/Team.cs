@@ -258,5 +258,61 @@ namespace FootballTactics.Teams
 
             return total / players.Count;
         }
+
+        public float GetBuildUpContribution(Lineup lineup)
+        {
+            var players =
+                GetStartingPlayers(lineup).ToList();
+
+            if (players.Count == 0)
+                return 0f;
+
+            return players
+                .Sum(p =>
+                    RoleBehaviour.BuildUpContribution(
+                        p.Role));
+        }
+
+        public float GetChanceCreationContribution(Lineup lineup)
+        {
+            var players =
+                GetStartingPlayers(lineup).ToList();
+
+            if (players.Count == 0)
+                return 0f;
+
+            return players
+                .Sum(p =>
+                    RoleBehaviour.ChanceCreationContribution(
+                        p.Role));
+        }
+
+        public float GetPressingContribution(Lineup lineup)
+        {
+            var players =
+                GetStartingPlayers(lineup).ToList();
+
+            if (players.Count == 0)
+                return 0f;
+
+            return players
+                .Sum(p =>
+                    RoleBehaviour.PressingContribution(
+                        p.Role));
+        }
+
+        public float GetDefensiveContribution(Lineup lineup)
+        {
+            var players =
+                GetStartingPlayers(lineup).ToList();
+
+            if (players.Count == 0)
+                return 0f;
+
+            return players
+                .Sum(p =>
+                    RoleBehaviour.DefensiveContribution(
+                        p.Role));
+        }
     }
 }
