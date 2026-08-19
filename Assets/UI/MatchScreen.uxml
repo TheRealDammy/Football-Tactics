@@ -104,6 +104,14 @@
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
+        <ui:VisualElement name="tacticalDecisionOverlay" class="tactical-decision-overlay">
+
+            <ui:VisualElement name="tacticalDecisionPanel" class="tactical-decision-panel">
+                <ui:Label name="tacticalDecisionTitle" class="decision-title" text="TACTICAL SITUATION" />
+                <ui:Label name="tacticalDecisionDescription" class="decision-description" text="" />
+                <ui:VisualElement name="tacticalDecisionOptions" class="decision-options" />
+            </ui:VisualElement>
+        </ui:VisualElement>
         <ui:VisualElement name="fullTimeOverlay" class="full-time-overlay">
             <ui:VisualElement name="fullTimeDialog" class="full-time-dialog">
                 <ui:Label name="fullTimeLabel" text="FULL TIME" class="full-time"/>

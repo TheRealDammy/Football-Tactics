@@ -47,6 +47,13 @@ namespace FootballTactics.UI
 
         private int displayedEvents;
 
+        private VisualElement tacticalDecisionOverlay;
+        private Label tacticalDecisionTitle;
+        private Label tacticalDecisionDescription;
+        private VisualElement tacticalDecisionOptions;
+
+        private TacticalSituation displayedSituation;
+
         private void Awake()
         {
             document = GetComponent<UIDocument>();
@@ -131,6 +138,29 @@ namespace FootballTactics.UI
 
             playerOnList =
                 root.Q<ScrollView>("playerOnList");
+
+            tacticalDecisionOverlay =
+                root.Q<VisualElement>(
+                            "tacticalDecisionOverlay");
+
+            tacticalDecisionTitle =
+                root.Q<Label>(
+                    "tacticalDecisionTitle");
+
+            tacticalDecisionDescription =
+                root.Q<Label>(
+                    "tacticalDecisionDescription");
+
+            tacticalDecisionOptions =
+                root.Q<VisualElement>(
+                    "tacticalDecisionOptions");
+
+            Debug.Log(
+                $"Tactical UI: " +
+                $"Overlay={tacticalDecisionOverlay != null}, " +
+                $"Title={tacticalDecisionTitle != null}, " +
+                $"Description={tacticalDecisionDescription != null}, " +
+                $"Options={tacticalDecisionOptions != null}");
         }
 
         private void RegisterButtons()
@@ -357,6 +387,8 @@ namespace FootballTactics.UI
                         DisplayStyle.None;
                 }
             }
+
+            UpdateTacticalDecision();
         }
 
         private void UpdateEvents(MatchState state)
@@ -407,7 +439,7 @@ namespace FootballTactics.UI
 
             substitutionAvailabilityLabel.text =
                 $"Substitutions remaining: " +
-                $"{3 - engine.HomeSubstitutionsUsed}";
+                $"{5 - engine.HomeSubstitutionsUsed}";
 
             RefreshSubstitutionLists();
             UpdateSelectedSubstitutionText();
@@ -569,6 +601,66 @@ namespace FootballTactics.UI
                 PlayerPosition.Attacker => "ATT",
                 _ => "?"
             };
+        }
+
+        private void UpdateTacticalDecision()
+        {
+            TacticalSituation situation =
+                matchSimulator.PendingSituation;
+
+            if (situation == null)
+            {
+                displayedSituation = null;
+
+                tacticalDecisionOverlay.style.display =
+                    DisplayStyle.None;
+
+                return;
+            }
+
+            if (displayedSituation == situation)
+                return;
+
+            displayedSituation = situation;
+
+            tacticalDecisionTitle.text =
+                situation.Title;
+
+            tacticalDecisionDescription.text =
+                situation.Description;
+
+            tacticalDecisionOptions.Clear();
+
+            foreach (
+                TacticalSituationOption option
+                in situation.Options)
+            {
+                Button button =
+                    new();
+
+                button.text =
+                    $"{option.Title}\n\n" +
+                    option.Description;
+
+                button.AddToClassList(
+                    "decision-button");
+
+                button.clicked += () =>
+                {
+                    matchSimulator.ResolveSituation(
+                        option.Id);
+
+                    displayedSituation = null;
+
+                    UpdateTacticalDecision();
+                };
+
+                tacticalDecisionOptions.Add(
+                    button);
+            }
+
+            tacticalDecisionOverlay.style.display =
+                DisplayStyle.Flex;
         }
     }
 }

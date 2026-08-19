@@ -20,6 +20,17 @@ namespace FootballTactics.Simulation
         private float awayMomentum = 0f;
         private int lastTacticalChangeMinute = -10;
 
+        private TacticalSituation pendingSituation;
+
+        private int nextSituationMinute = 5;
+
+        private float temporaryPossessionModifier = 1f;
+        private float temporaryChanceModifier = 1f;
+        private float temporaryFatigueModifier = 1f;
+        private float temporaryCounterModifier = 1f;
+
+        private int temporaryModifierMinutes;
+
         public MatchState State { get; }
         public TacticalSettings HomeTactics => homeTactics;
         public TacticalSettings AwayTactics => awayTactics;
@@ -32,6 +43,7 @@ namespace FootballTactics.Simulation
 
         public Lineup HomeLineup => homeLineup;
         public Lineup AwayLineup => awayLineup;
+        public TacticalSituation PendingSituation => pendingSituation;
 
         public MatchEngine(
             Team homeTeam,
@@ -54,6 +66,9 @@ namespace FootballTactics.Simulation
 
         public void SimulateMinute()
         {
+            if (pendingSituation != null)
+                return;
+
             if (State.Minute >= 90)
                 return;
 
@@ -62,18 +77,13 @@ namespace FootballTactics.Simulation
             UpdateMomentum();
             UpdatePossession();
 
-            MatchSituation homeSituation =
-                GenerateSituation(true);
-
-            MatchSituation awaySituation =
-                GenerateSituation(false);
-
-            ProcessSituation(homeSituation);
-            ProcessSituation(awaySituation);
-
             SimulateAttacks(State.HomePossession);
 
             ApplyFatigue();
+
+            ProcessTemporaryModifiers();
+
+            TryGenerateSituation();
         }
 
         public void SetHomeMentality(Mentality mentality)
@@ -206,10 +216,104 @@ namespace FootballTactics.Simulation
 
             return true;
         }
+
+        public bool ResolveSituation(string optionId)
+        {
+            if (pendingSituation == null)
+                return false;
+
+            TacticalSituationOption selected =
+                null;
+
+            foreach (
+                TacticalSituationOption option
+                in pendingSituation.Options)
+            {
+                if (option.Id == optionId)
+                {
+                    selected = option;
+                    break;
+                }
+            }
+
+            if (selected == null)
+                return false;
+
+            temporaryPossessionModifier =
+                selected.PossessionModifier;
+
+            temporaryChanceModifier =
+                selected.ChanceModifier;
+
+            temporaryFatigueModifier =
+                selected.FatigueModifier;
+
+            temporaryCounterModifier =
+                selected.CounterAttackModifier;
+
+            temporaryModifierMinutes = 5;
+
+            State.AddEvent(
+                $"{selected.Title}: " +
+                selected.Description);
+
+            pendingSituation = null;
+
+            return true;
+        }
+
         private bool CanChangeTactics()
         {
             return State.Minute -
                    lastTacticalChangeMinute >= 3;
+        }
+
+        private void TryGenerateSituation()
+        {
+            if (pendingSituation != null)
+                return;
+
+            if (State.Minute < nextSituationMinute)
+                return;
+
+            // Give the game a chance to have a normal
+            // stretch of football without an intervention.
+            if (Random.value > 0.65f)
+            {
+                nextSituationMinute =
+                    State.Minute + Random.Range(5, 10);
+
+                return;
+            }
+
+            TacticalSituation situation =
+                TacticalSituationGenerator.Generate(this);
+
+            if (situation == null)
+            {
+                nextSituationMinute =
+                    State.Minute + Random.Range(5, 10);
+
+                return;
+            }
+
+            pendingSituation = situation;
+        }
+
+        private void ProcessTemporaryModifiers()
+        {
+            if (temporaryModifierMinutes <= 0)
+                return;
+
+            temporaryModifierMinutes--;
+
+            if (temporaryModifierMinutes == 0)
+            {
+                temporaryPossessionModifier = 1f;
+                temporaryChanceModifier = 1f;
+                temporaryFatigueModifier = 1f;
+                temporaryCounterModifier = 1f;
+            }
         }
 
         private void RebuildHomeLineup()
@@ -255,6 +359,8 @@ namespace FootballTactics.Simulation
                 momentumDifference * 0.8f +
                 fatigueDifference +
                 2f; // home advantage
+
+            targetPossession *= temporaryPossessionModifier;
 
             // Move toward the target rather than jumping there.
             currentHomePossession = Mathf.Lerp(
@@ -331,6 +437,8 @@ namespace FootballTactics.Simulation
                 attackingTeam.GetRoleAttackImpact(attackingLineup) *
                 attackingTactics.Formation.GetAttackModifier() *
                 attackingTactics.GetAttackModifier();
+
+            attackingStrength *= temporaryChanceModifier;
 
             float defendingStrength =
                 defendingTeam.GetAverageDefence(defendingLineup) *
@@ -475,15 +583,21 @@ namespace FootballTactics.Simulation
             if (State.Minute % 5 != 0)
                 return;
 
-            int baseDrain = 1;
+            int homeBaseDrain = 1;
+            int awayBaseDrain = 1;
+
+            homeBaseDrain =
+                Mathf.CeilToInt(
+                    homeBaseDrain *
+                    temporaryFatigueModifier);
 
             homeTeam.ReduceFitness(
-                baseDrain,
+                homeBaseDrain,
                 homeLineup,
                 homeTactics.Pressing);
 
             awayTeam.ReduceFitness(
-                baseDrain,
+                awayBaseDrain,
                 awayLineup,
                 awayTactics.Pressing);
         }

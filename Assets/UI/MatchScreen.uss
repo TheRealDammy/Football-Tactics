@@ -672,3 +672,127 @@
 
     color: rgb(151, 156, 168);
 }
+
+/* ================================================================
+   TACTICAL DECISION OVERLAY
+   ================================================================ */
+
+.tactical-decision-overlay {
+    position: absolute;
+
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+
+    align-items: center;
+    justify-content: center;
+
+    background-color: rgba(5, 6, 9, 0.78);
+
+    display: none;
+
+    z-index: 100;
+
+    overflow: hidden;
+}
+
+.tactical-decision-panel {
+    width: 760px;
+    max-width: 82%;
+
+    min-width: 0;
+
+    padding-left: 24px;
+    padding-right: 24px;
+    padding-top: 22px;
+    padding-bottom: 22px;
+
+    background-color: rgb(23, 25, 31);
+
+    z-index: 101;
+
+    border-width: 1px;
+    border-color: rgb(78, 83, 97);
+}
+
+.decision-title {
+    width: 100%;
+
+    margin-bottom: 8px;
+
+    font-size: 24px;
+
+    color: rgb(246, 247, 250);
+
+    -unity-font-style: bold;
+}
+
+.decision-description {
+    width: 100%;
+
+    margin-bottom: 18px;
+
+    font-size: 14px;
+
+    color: rgb(194, 198, 207);
+
+    white-space: normal;
+}
+
+.decision-options {
+    width: 100%;
+
+    min-width: 0;
+
+    flex-direction: row;
+}
+
+.decision-button {
+    flex-grow: 1;
+    flex-shrink: 1;
+
+    /* Critical: allows all three buttons to share the space. */
+    flex-basis: 0;
+
+    width: 0;
+    min-width: 0;
+
+    height: 86px;
+    min-height: 86px;
+
+    margin-left: 0;
+    margin-right: 8px;
+
+    padding-left: 12px;
+    padding-right: 12px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+    background-color: rgb(40, 43, 51);
+
+    border-width: 1px;
+    border-color: rgb(65, 69, 81);
+
+    color: rgb(235, 237, 242);
+
+    font-size: 11px;
+
+    white-space: normal;
+
+    -unity-font-style: bold;
+}
+
+.decision-button:last-child {
+    margin-right: 0;
+}
+
+.decision-button:hover {
+    background-color: rgb(56, 60, 71);
+
+    border-color: rgb(91, 97, 111);
+}
+
+.decision-button:active {
+    background-color: rgb(68, 73, 87);
+}

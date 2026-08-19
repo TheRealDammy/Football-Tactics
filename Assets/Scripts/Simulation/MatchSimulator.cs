@@ -20,6 +20,7 @@ namespace FootballTactics.Simulation
 
         public Team HomeTeam => homeTeam;
         public Team AwayTeam => awayTeam;
+        public TacticalSituation PendingSituation => matchEngine?.PendingSituation;
 
         public bool HasMatch =>
             matchEngine != null;
@@ -97,10 +98,12 @@ namespace FootballTactics.Simulation
             return null;
         }
 
-        private void OnAdvanceMinute(
-            InputAction.CallbackContext context)
+        private void OnAdvanceMinute( InputAction.CallbackContext context)
         {
             if (matchEngine == null)
+                return;
+
+            if (matchEngine.PendingSituation != null)
                 return;
 
             matchEngine.SimulateMinute();
@@ -143,6 +146,12 @@ namespace FootballTactics.Simulation
                    matchEngine.MakeHomeSubstitution(
                        playerOn,
                        playerOff);
+        }
+
+        public bool ResolveSituation( string optionId)
+        {
+            return matchEngine != null &&
+                   matchEngine.ResolveSituation(optionId);
         }
 
         private void OnEnable()
