@@ -8,6 +8,8 @@ namespace FootballTactics.Simulation
         TiredPlayer,
         SpaceBehindDefence,
         OpponentDeepBlock,
+        PossessionBattle,
+        WidthBattle,
         ProtectLead
     }
 

@@ -54,66 +54,61 @@ namespace FootballTactics.Simulation
         // MATCH ENGINE MODIFIERS
         // =========================================================
 
-        public static float GetMidfieldModifier(
-            this Formation formation)
+        public static float GetMidfieldModifier(this Formation formation)
         {
             return formation switch
             {
                 Formation.FourFourTwo => 1.00f,
-                Formation.FourThreeThree => 1.08f,
-                Formation.FourTwoThreeOne => 1.12f,
+                Formation.FourThreeThree => 1.02f,
+                Formation.FourTwoThreeOne => 1.04f,
 
                 _ => 1.00f
             };
         }
 
-        public static float GetAttackModifier(
-            this Formation formation)
+        public static float GetAttackModifier( this Formation formation)
+        {
+            return formation switch
+            {
+                Formation.FourFourTwo => 1.01f,
+                Formation.FourThreeThree => 1.03f,
+                Formation.FourTwoThreeOne => 1.02f,
+
+                _ => 1.00f
+            };
+        }
+
+        public static float GetDefenceModifier(this Formation formation)
+        {
+            return formation switch
+            {
+                Formation.FourFourTwo => 1.03f,
+                Formation.FourThreeThree => 0.99f,
+                Formation.FourTwoThreeOne => 1.01f,
+
+                _ => 1.00f
+            };
+        }
+
+        public static float GetWidthModifier(this Formation formation)
+        {
+            return formation switch
+            {
+                Formation.FourFourTwo => 1.00f,
+                Formation.FourThreeThree => 1.04f,
+                Formation.FourTwoThreeOne => 1.01f,
+
+                _ => 1.00f
+            };
+        }
+
+        public static float GetCounterModifier(this Formation formation)
         {
             return formation switch
             {
                 Formation.FourFourTwo => 1.04f,
-                Formation.FourThreeThree => 1.10f,
-                Formation.FourTwoThreeOne => 1.07f,
-
-                _ => 1.00f
-            };
-        }
-
-        public static float GetDefenceModifier(
-            this Formation formation)
-        {
-            return formation switch
-            {
-                Formation.FourFourTwo => 1.05f,
-                Formation.FourThreeThree => 0.98f,
+                Formation.FourThreeThree => 1.01f,
                 Formation.FourTwoThreeOne => 1.02f,
-
-                _ => 1.00f
-            };
-        }
-
-        public static float GetWidthModifier(
-            this Formation formation)
-        {
-            return formation switch
-            {
-                Formation.FourFourTwo => 0.98f,
-                Formation.FourThreeThree => 1.10f,
-                Formation.FourTwoThreeOne => 1.02f,
-
-                _ => 1.00f
-            };
-        }
-
-        public static float GetCounterModifier(
-            this Formation formation)
-        {
-            return formation switch
-            {
-                Formation.FourFourTwo => 1.08f,
-                Formation.FourThreeThree => 1.00f,
-                Formation.FourTwoThreeOne => 1.04f,
 
                 _ => 1.00f
             };

@@ -22,7 +22,9 @@ namespace FootballTactics.Simulation
 
         private TacticalSituation pendingSituation;
 
-        private int nextSituationMinute = 5;
+        private int nextSituationMinute = 8;
+
+        private int situationsShown;
 
         private float temporaryPossessionModifier = 1f;
         private float temporaryChanceModifier = 1f;
@@ -78,6 +80,7 @@ namespace FootballTactics.Simulation
             UpdatePossession();
 
             SimulateAttacks(State.HomePossession);
+            OpponentTacticalAI.Update(this);
 
             ApplyFatigue();
 
@@ -123,6 +126,67 @@ namespace FootballTactics.Simulation
 
             State.AddEvent(
                 $"{homeTeam.Name} lineup updated.");
+        }
+
+        public void SetAwayMentality( Mentality mentality, bool createEvent = true)
+        {
+            if (awayTactics.Mentality == mentality)
+                return;
+
+            awayTactics.Mentality = mentality;
+
+            if (createEvent)
+            {
+                State.AddEvent(
+                    $"{awayTeam.Name} change mentality to {mentality}.");
+            }
+        }
+
+        public void SetAwayPressing( Pressing pressing, bool createEvent = true)
+        {
+            if (awayTactics.Pressing == pressing)
+                return;
+
+            awayTactics.Pressing = pressing;
+
+            if (createEvent)
+            {
+                State.AddEvent(
+                    $"{awayTeam.Name} change pressing to {pressing}.");
+            }
+        }
+
+        public void SetAwayDefensiveLine( DefensiveLine line, bool createEvent = true)
+        {
+            if (awayTactics.DefensiveLine == line)
+                return;
+
+            awayTactics.DefensiveLine = line;
+
+            if (createEvent)
+            {
+                State.AddEvent(
+                    $"{awayTeam.Name} change defensive line to {line}.");
+            }
+        }
+
+        public void SetAwayFormation( Formation formation, bool createEvent = true)
+        {
+            if (awayTactics.Formation == formation)
+                return;
+
+            awayTactics.Formation = formation;
+
+            awayLineup =
+                LineupBuilder.BuildRecommendedLineup(
+                    awayTeam,
+                    formation);
+
+            if (createEvent)
+            {
+                State.AddEvent(
+                    $"{awayTeam.Name} switch to {FormatFormation(formation)}.");
+            }
         }
 
         public bool MakeHomeSubstitution( string playerOn, string playerOff)
@@ -262,6 +326,28 @@ namespace FootballTactics.Simulation
             return true;
         }
 
+        public bool AutoResolvePendingSituation()
+        {
+            if (pendingSituation == null)
+                return false;
+
+            if (pendingSituation.Options.Count == 0)
+            {
+                pendingSituation = null;
+
+                return false;
+            }
+
+            // For now, choose a random valid response.
+            TacticalSituationOption option =
+                pendingSituation.Options[
+                    Random.Range(
+                        0,
+                        pendingSituation.Options.Count)];
+
+            return ResolveSituation(option.Id);
+        }
+
         private bool CanChangeTactics()
         {
             return State.Minute -
@@ -276,13 +362,17 @@ namespace FootballTactics.Simulation
             if (State.Minute < nextSituationMinute)
                 return;
 
-            // Give the game a chance to have a normal
-            // stretch of football without an intervention.
-            if (Random.value > 0.65f)
-            {
-                nextSituationMinute =
-                    State.Minute + Random.Range(5, 10);
+            // Don't let the game overwhelm the player.
+            if (situationsShown >= 6)
+                return;
 
+            // Some checkpoints are more likely to produce decisions.
+            float generationChance =
+                GetSituationGenerationChance();
+
+            if (Random.value > generationChance)
+            {
+                ScheduleNextSituation();
                 return;
             }
 
@@ -291,13 +381,43 @@ namespace FootballTactics.Simulation
 
             if (situation == null)
             {
-                nextSituationMinute =
-                    State.Minute + Random.Range(5, 10);
-
+                ScheduleNextSituation();
                 return;
             }
 
             pendingSituation = situation;
+
+            situationsShown++;
+        }
+
+        private float GetSituationGenerationChance()
+        {
+            int minute =
+                State.Minute;
+
+            if (minute < 15)
+                return 0.55f;
+
+            if (minute < 30)
+                return 0.70f;
+
+            if (minute < 45)
+                return 0.80f;
+
+            if (minute < 60)
+                return 0.70f;
+
+            if (minute < 75)
+                return 0.80f;
+
+            return 0.70f;
+        }
+
+        private void ScheduleNextSituation()
+        {
+            nextSituationMinute =
+                State.Minute +
+                Random.Range(6, 10);
         }
 
         private void ProcessTemporaryModifiers()
@@ -432,18 +552,58 @@ namespace FootballTactics.Simulation
                     ? homeLineup
                     : awayLineup;
 
-            float attackingStrength =
-                attackingTeam.GetAverageAttack(attackingLineup) *
-                attackingTeam.GetRoleAttackImpact(attackingLineup) *
-                attackingTactics.Formation.GetAttackModifier() *
-                attackingTactics.GetAttackModifier();
+            Player attackingPlayer =
+                attackingTeam.SelectAttackingPlayer(
+                    attackingLineup);
 
-            attackingStrength *= temporaryChanceModifier;
+            Player defendingPlayer =
+                defendingTeam.SelectDefendingPlayer(
+                    defendingLineup);
+
+            if (attackingPlayer == null ||
+                defendingPlayer == null)
+            {
+                return;
+            }
+
+            float attackingStrength =
+                PlayerPerformance.GetAttackRating(
+                    attackingPlayer);
 
             float defendingStrength =
-                defendingTeam.GetAverageDefence(defendingLineup) *
-                defendingTeam.GetRoleDefenceImpact(defendingLineup) *
-                defendingTacticsModifier(defendingTeam);
+                PlayerPerformance.GetDefenceRating(
+                    defendingPlayer);
+
+            attackingStrength *=
+                attackingTeam.GetRoleAttackImpact(
+                    attackingLineup);
+
+            attackingStrength *=
+                attackingTactics.Formation
+                    .GetAttackModifier();
+
+            attackingStrength *=
+                attackingTactics.GetAttackModifier();
+
+            defendingStrength *=
+                defendingTeam.GetRoleDefenceImpact(
+                    defendingLineup);
+
+            defendingStrength *=
+                defendingTacticsModifier(
+                    defendingTeam);
+
+            attackingStrength =
+                Mathf.Clamp(
+                    attackingStrength,
+                    20f,
+                    110f);
+
+            defendingStrength =
+                Mathf.Clamp(
+                    defendingStrength,
+                    20f,
+                    110f);
 
             float pressingEffect =
                 attackingTactics.GetPressingModifier();
@@ -451,6 +611,17 @@ namespace FootballTactics.Simulation
             float fitnessEffect =
                 attackingTeam
                     .GetAverageFitness(attackingLineup) / 100f;
+
+            float attackerPace =
+                PlayerPerformance.GetPaceRating(
+                    attackingPlayer);
+
+            float defenderPace =
+                PlayerPerformance.GetPaceRating(
+                    defendingPlayer);
+
+            float paceAdvantage =
+                (attackerPace - defenderPace) / 100f;
 
             bool isCounterAttack =
                 Random.value < 0.12f;
@@ -491,14 +662,14 @@ namespace FootballTactics.Simulation
                 State.AddHomeShot(xG);
 
                 State.AddEvent(
-                    $"Shot — {homeTeam.Name} ({xG:F2} xG)");
+                    $"Shot — {attackingPlayer.Name} ({xG:F2} xG)");
             }
             else
             {
                 State.AddAwayShot(xG);
 
                 State.AddEvent(
-                    $"Shot — {awayTeam.Name} ({xG:F2} xG)");
+                    $"Shot — {attackingPlayer.Name} ({xG:F2} xG)");
             }          
 
             float goalProbability = xG;
@@ -510,13 +681,25 @@ namespace FootballTactics.Simulation
                         attackingTeam,
                         defendingTeam);
 
-                chanceQuality *= counterModifier;
+                float paceEffect =
+                    Mathf.Clamp(
+                        paceAdvantage * 0.45f,
+                        -0.20f,
+                        0.20f);
 
-                if (counterModifier > 1.05f)
+                chanceQuality +=
+                    paceEffect *
+                    counterModifier;
+
+                chanceQuality =
+                    Mathf.Clamp01(
+                        chanceQuality);
+
+                if (paceAdvantage > 0.12f)
                 {
                     State.AddEvent(
-                        $"{attackingTeam.Name} break quickly " +
-                        "behind the defensive line.");
+                        $"{attackingPlayer.Name} exploits " +
+                        $"the space behind the defence.");
                 }
             }
 
@@ -527,14 +710,16 @@ namespace FootballTactics.Simulation
                     State.HomeScores();
 
                     State.AddEvent(
-                        $"GOAL! {homeTeam.Name}");
+                        $"GOAL! {attackingPlayer.Name} " +
+                        $"for {homeTeam.Name}!");
                 }
                 else
                 {
                     State.AwayScores();
 
                     State.AddEvent(
-                        $"GOAL! {awayTeam.Name}");
+                        $"GOAL! {attackingPlayer.Name} " +
+                        $"for {awayTeam.Name}!");
                 }
             }
         }
@@ -789,6 +974,16 @@ namespace FootballTactics.Simulation
                 };
 
             State.AddEvent(description);
+        }
+
+        private static string FormatFormation(Formation formation)
+        {
+            return formation switch
+            {
+                Formation.FourFourTwo => "4-4-2",
+                Formation.FourTwoThreeOne => "4-2-3-1",
+                _ => "4-3-3"
+            };
         }
     }
 }

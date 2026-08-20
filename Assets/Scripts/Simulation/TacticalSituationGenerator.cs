@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEngine;
 
 namespace FootballTactics.Simulation
 {
@@ -7,40 +8,141 @@ namespace FootballTactics.Simulation
         public static TacticalSituation Generate(
             MatchEngine engine)
         {
-            TacticalSituation situation;
+            List<TacticalSituation> candidates = new();
 
-            situation =
-                TryOppositionPressing(engine);
+            AddIfValid(
+                candidates,
+                TryOppositionPressing(engine));
 
-            if (situation != null)
-                return situation;
+            AddIfValid(
+                candidates,
+                TryTiredPlayer(engine));
 
-            situation =
-                TryTiredPlayer(engine);
+            AddIfValid(
+                candidates,
+                TrySpaceBehindDefence(engine));
 
-            if (situation != null)
-                return situation;
+            AddIfValid(
+                candidates,
+                TryOpponentDeepBlock(engine));
 
-            situation =
-                TrySpaceBehindDefence(engine);
+            AddIfValid(
+                candidates,
+                TryProtectLead(engine));
+            AddIfValid(
+                candidates,
+                TryPossessionBattle(engine));
+            AddIfValid(
+                candidates,
+                TryWidthBattle(engine));
 
-            if (situation != null)
-                return situation;
+            if (candidates.Count == 0)
+                return null;
 
-            situation =
-                TryOpponentDeepBlock(engine);
-
-            if (situation != null)
-                return situation;
-
-            situation =
-                TryProtectLead(engine);
-
-            return situation;
+            return candidates[
+                Random.Range(0, candidates.Count)];
         }
 
-        private static TacticalSituation TryOppositionPressing(
-            MatchEngine engine)
+        private static void AddIfValid(
+            List<TacticalSituation> candidates,
+            TacticalSituation situation)
+        {
+            if (situation != null)
+                candidates.Add(situation);
+        }
+
+        private static TacticalSituation TryPossessionBattle(MatchEngine engine)
+        {
+            float possession =
+                engine.State.HomePossession;
+
+            if (possession < 42f || possession > 58f)
+                return null;
+
+            return new TacticalSituation(
+                TacticalSituationType.PossessionBattle,
+
+                "MIDFIELD BATTLE",
+
+                "The match is becoming a midfield contest. " +
+                "How do you want to approach it?",
+
+                new List<TacticalSituationOption>
+                {
+            new(
+                "control",
+                "CONTROL",
+                "Commit more players to circulation.",
+                1.07f,
+                0.96f,
+                0.95f,
+                0.92f),
+
+            new(
+                "direct",
+                "PLAY DIRECT",
+                "Look to move the ball forward quickly.",
+                0.94f,
+                1.08f,
+                1.02f,
+                1.06f),
+
+            new(
+                "balanced",
+                "STAY BALANCED",
+                "Keep the current approach.",
+                1.00f,
+                1.00f,
+                1.00f,
+                1.00f)
+                });
+        }
+
+        private static TacticalSituation TryWidthBattle(MatchEngine engine)
+        {
+            if (engine.State.Minute > 65)
+                return null;
+
+            return new TacticalSituation(
+                TacticalSituationType.WidthBattle,
+
+                "SPACE OUT WIDE",
+
+                "There is space developing in wide areas. " +
+                "How do you want to exploit it?",
+
+                new List<TacticalSituationOption>
+                {
+            new(
+                "use_wings",
+                "USE THE WINGS",
+                "Push attacks towards the wide areas.",
+                1.01f,
+                1.10f,
+                1.05f,
+                0.98f),
+
+            new(
+                "attack_middle",
+                "ATTACK THROUGH THE MIDDLE",
+                "Keep the attack central.",
+                0.99f,
+                1.06f,
+                1.04f,
+                1.00f),
+
+            new(
+                "retain_shape",
+                "RETAIN SHAPE",
+                "Don't force the attack.",
+                1.03f,
+                0.93f,
+                0.90f,
+                0.94f)
+                });
+        }
+
+        private static TacticalSituation TryOppositionPressing(MatchEngine engine)
         {
             if (engine.AwayTactics.Pressing != Pressing.High)
                 return null;
@@ -85,8 +187,7 @@ namespace FootballTactics.Simulation
                 });
         }
 
-        private static TacticalSituation TryTiredPlayer(
-            MatchEngine engine)
+        private static TacticalSituation TryTiredPlayer(MatchEngine engine)
         {
             float fitness =
                 engine.HomeTeam.GetAverageFitness(
@@ -135,8 +236,7 @@ namespace FootballTactics.Simulation
                 });
         }
 
-        private static TacticalSituation TrySpaceBehindDefence(
-            MatchEngine engine)
+        private static TacticalSituation TrySpaceBehindDefence(MatchEngine engine)
         {
             if (engine.HomeTactics.DefensiveLine !=
                 DefensiveLine.High)
@@ -184,8 +284,7 @@ namespace FootballTactics.Simulation
                 });
         }
 
-        private static TacticalSituation TryOpponentDeepBlock(
-            MatchEngine engine)
+        private static TacticalSituation TryOpponentDeepBlock(MatchEngine engine)
         {
             if (engine.AwayTactics.Mentality !=
                 Mentality.Defensive)
@@ -238,8 +337,7 @@ namespace FootballTactics.Simulation
                 });
         }
 
-        private static TacticalSituation TryProtectLead(
-            MatchEngine engine)
+        private static TacticalSituation TryProtectLead(MatchEngine engine)
         {
             if (engine.State.Minute < 70)
                 return null;
@@ -249,6 +347,9 @@ namespace FootballTactics.Simulation
             {
                 return null;
             }
+
+            if (UnityEngine.Random.value > 0.45f)
+                return null;
 
             return new TacticalSituation(
                 TacticalSituationType.ProtectLead,

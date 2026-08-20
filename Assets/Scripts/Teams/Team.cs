@@ -336,5 +336,88 @@ namespace FootballTactics.Teams
                     RoleBehaviour.DefensiveContribution(
                         p.Role));
         }
+
+        public Player SelectAttackingPlayer(Lineup lineup)
+        {
+            Player bestPlayer = null;
+            float bestScore = float.MinValue;
+
+            foreach (Player player
+                in GetStartingPlayers(lineup))
+            {
+                float roleWeight =
+                    player.Role switch
+                    {
+                        PlayerRole.Striker => 1.30f,
+                        PlayerRole.Winger => 1.20f,
+                        PlayerRole.Playmaker => 1.05f,
+                        PlayerRole.BoxToBox => 0.90f,
+                        PlayerRole.CentralMidfielder => 0.80f,
+                        PlayerRole.DefensiveMidfielder => 0.55f,
+
+                        PlayerRole.FullBack => 0.45f,
+                        PlayerRole.CentreBack => 0.25f,
+                        PlayerRole.Sweeper => 0.20f,
+                        PlayerRole.LineHolding => 0.15f,
+
+                        _ => 0.50f
+                    };
+
+                float score =
+                    PlayerPerformance.GetAttackRating(player) *
+                    roleWeight *
+                    UnityEngine.Random.Range(0.85f, 1.15f);
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestPlayer = player;
+                }
+            }
+
+            return bestPlayer;
+        }
+
+        public Player SelectDefendingPlayer(Lineup lineup)
+        {
+            Player bestPlayer = null;
+            float bestScore = float.MinValue;
+
+            foreach (Player player
+                in GetStartingPlayers(lineup))
+            {
+                float roleWeight =
+                    player.Role switch
+                    {
+                        PlayerRole.CentreBack => 1.25f,
+                        PlayerRole.LineHolding => 1.25f,
+                        PlayerRole.Sweeper => 1.15f,
+                        PlayerRole.DefensiveMidfielder => 1.10f,
+                        PlayerRole.FullBack => 1.05f,
+
+                        PlayerRole.BoxToBox => 0.85f,
+                        PlayerRole.CentralMidfielder => 0.80f,
+
+                        PlayerRole.Winger => 0.55f,
+                        PlayerRole.Playmaker => 0.50f,
+                        PlayerRole.Striker => 0.30f,
+
+                        _ => 0.50f
+                    };
+
+                float score =
+                    PlayerPerformance.GetDefenceRating(player) *
+                    roleWeight *
+                    UnityEngine.Random.Range(0.85f, 1.15f);
+
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    bestPlayer = player;
+                }
+            }
+
+            return bestPlayer;
+        }
     }
 }
