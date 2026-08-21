@@ -11,25 +11,15 @@ namespace FootballTactics.Teams
             Team team,
             Formation formation)
         {
-            FormationDefinition definition =
-                formation.GetDefinition();
-
-            Lineup lineup =
-                new Lineup(formation);
-
+            FormationDefinition definition = formation.GetDefinition();
+            Lineup lineup = new Lineup(formation);
             HashSet<Player> usedPlayers = new();
             IReadOnlyList<Player> squad = team.GetFullSquad();
 
-            // Fill the most restrictive positions first. This prevents a
-            // flexible player (for example a winger in a wide midfield slot)
-            // from consuming a player needed for a specialist position later.
-            foreach (FormationSlot slot in definition.Slots
-                         .OrderBy(GetSlotPriority))
+            foreach (FormationSlot slot in definition.Slots.OrderBy(GetSlotPriority))
             {
                 Player bestPlayer = FindBestPlayerForSlot(
-                    squad,
-                    slot,
-                    usedPlayers);
+                    squad, slot, usedPlayers);
 
                 if (bestPlayer == null)
                     continue;
@@ -61,17 +51,24 @@ namespace FootballTactics.Teams
             return lineup;
         }
 
-        /// <summary>
-        /// The single source of truth for whether a player can occupy a
-        /// formation slot. UI lineup selection and match substitutions both
-        /// use this method.
-        /// </summary>
         public static bool CanPlayerPlaySlot(
             Player player,
             FormationSlot slot)
         {
             if (player == null || slot == null)
                 return false;
+
+            // 4-4-2 uses LS/RS for the front two. The FormationArea names
+            // are shared with 4-3-3, so the slot id disambiguates them.
+            if ((slot.Id == "LS" || slot.Id == "RS") &&
+                (slot.Area == FormationArea.LeftWing ||
+                 slot.Area == FormationArea.RightWing))
+            {
+                return player.Position == PlayerPosition.Attacker &&
+                       IsAny(player.Role,
+                           PlayerRole.Striker,
+                           PlayerRole.Winger);
+            }
 
             return slot.Area switch
             {
@@ -98,18 +95,15 @@ namespace FootballTactics.Teams
 
                 FormationArea.LeftMidfield or
                 FormationArea.RightMidfield =>
-                    player.Position == PlayerPosition.Midfielder &&
-                    IsAny(player.Role,
-                        PlayerRole.CentralMidfielder,
-                        PlayerRole.Playmaker,
-                        PlayerRole.DefensiveMidfielder,
-                        PlayerRole.BoxToBox)
+                    (player.Position == PlayerPosition.Midfielder &&
+                     IsAny(player.Role,
+                         PlayerRole.CentralMidfielder,
+                         PlayerRole.Playmaker,
+                         PlayerRole.DefensiveMidfielder,
+                         PlayerRole.BoxToBox))
                     ||
-                    player.Position == PlayerPosition.Attacker &&
-                    player.Role == PlayerRole.Winger
-                    ||
-                    player.Position == PlayerPosition.Defender &&
-                    player.Role == PlayerRole.FullBack,
+                    (player.Position == PlayerPosition.Attacker &&
+                     player.Role == PlayerRole.Winger),
 
                 FormationArea.DefensiveMidfield =>
                     player.Position == PlayerPosition.Midfielder &&
@@ -161,20 +155,34 @@ namespace FootballTactics.Teams
 
         private static int GetSlotPriority(FormationSlot slot)
         {
-            return slot.Area switch
+            // Prioritise the two central midfield slots before wide midfield
+            // so a 4-4-2 with three natural midfielders can still use a
+            // winger as the fourth midfielder. This prevents LM/RM becoming
+            // empty after the CMs consume every midfielder.
+            return slot.Id switch
             {
-                FormationArea.Goalkeeper => 0,
-                FormationArea.CentreBack => 1,
-                FormationArea.LeftBack => 2,
-                FormationArea.RightBack => 2,
-                FormationArea.DefensiveMidfield => 3,
-                FormationArea.CentreMidfield => 4,
-                FormationArea.AttackingMidfield => 5,
-                FormationArea.LeftWing => 6,
-                FormationArea.RightWing => 6,
-                FormationArea.Striker => 7,
-                FormationArea.LeftMidfield => 8,
-                FormationArea.RightMidfield => 8,
+                "GK" => 0,
+                "LCB" => 1,
+                "RCB" => 1,
+                "LB" => 2,
+                "RB" => 2,
+
+                "LDM" => 3,
+                "RDM" => 3,
+                "LCM" => 3,
+                "CM" => 3,
+                "RCM" => 3,
+
+                "LM" => 4,
+                "RM" => 4,
+
+                "CAM" => 5,
+                "LW" => 6,
+                "RW" => 6,
+                "ST" => 6,
+                "LS" => 6,
+                "RS" => 6,
+
                 _ => 99
             };
         }
@@ -246,14 +254,14 @@ namespace FootballTactics.Teams
                     score += player.Pace * 0.25f;
                     score += player.Attack * 0.30f;
                     score += player.Passing * 0.25f;
+                    if (player.Position == PlayerPosition.Midfielder)
+                        score += 20f;
                     if (player.Role == PlayerRole.Winger)
-                        score += 25f;
+                        score += 15f;
                     if (player.Role == PlayerRole.BoxToBox)
                         score += 18f;
                     if (player.Role == PlayerRole.CentralMidfielder)
                         score += 12f;
-                    if (player.Role == PlayerRole.FullBack)
-                        score += 8f;
                     break;
 
                 case FormationArea.CentreMidfield:
@@ -294,8 +302,10 @@ namespace FootballTactics.Teams
                 case FormationArea.RightWing:
                     score += player.Attack * 0.45f;
                     score += player.Pace * 0.30f;
-                    if (player.Role == PlayerRole.Winger)
+                    if (player.Role == PlayerRole.Striker)
                         score += 25f;
+                    if (player.Role == PlayerRole.Winger)
+                        score += 20f;
                     break;
 
                 case FormationArea.Striker:
