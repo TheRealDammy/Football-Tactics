@@ -4,15 +4,18 @@ using UnityEngine.UIElements;
 
 namespace FootballTactics.UI
 {
-    public sealed class PlayerDragHandler
+    /// <summary>
+    /// UI Toolkit drag detector that preserves normal Button clicks.
+    /// A short press is still handled by the Button; a drag captures the
+    /// pointer and invokes the supplied drop callback on release.
+    /// </summary>
+    public sealed class PlayerDragHandler : PointerManipulator
     {
-        private readonly VisualElement root;
-        private readonly VisualElement source;
         private readonly Action<Vector2> onDrop;
 
         private Vector2 startPosition;
-
-        private bool pointerDown;
+        private int pointerId = -1;
+        private bool active;
         private bool dragging;
 
         public PlayerDragHandler(
@@ -20,53 +23,69 @@ namespace FootballTactics.UI
             VisualElement source,
             Action<Vector2> onDrop)
         {
-            this.root = root;
-            this.source = source;
             this.onDrop = onDrop;
 
-            source.RegisterCallback<PointerDownEvent>(
-                OnPointerDown);
+            target = source;
 
-            source.RegisterCallback<PointerMoveEvent>(
-                OnPointerMove);
+            activators.Add(
+                new ManipulatorActivationFilter
+                {
+                    button = MouseButton.LeftMouse
+                });
 
-            source.RegisterCallback<PointerUpEvent>(
-                OnPointerUp);
+            source.AddManipulator(this);
         }
 
-        private void OnPointerDown(
-            PointerDownEvent evt)
+        protected override void RegisterCallbacksOnTarget()
         {
-            pointerDown = true;
-            dragging = false;
-
-            startPosition =
-                evt.position;
-
-            source.CapturePointer(
-                evt.pointerId);
-
-            evt.StopPropagation();
+            target.RegisterCallback<PointerDownEvent>(OnPointerDown);
+            target.RegisterCallback<PointerMoveEvent>(OnPointerMove);
+            target.RegisterCallback<PointerUpEvent>(OnPointerUp);
+            target.RegisterCallback<PointerCancelEvent>(OnPointerCancel);
+            target.RegisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
         }
 
-        private void OnPointerMove(
-            PointerMoveEvent evt)
+        protected override void UnregisterCallbacksFromTarget()
         {
-            if (!pointerDown)
+            target.UnregisterCallback<PointerDownEvent>(OnPointerDown);
+            target.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
+            target.UnregisterCallback<PointerUpEvent>(OnPointerUp);
+            target.UnregisterCallback<PointerCancelEvent>(OnPointerCancel);
+            target.UnregisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
+        }
+
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            if (active)
                 return;
 
-            float distance =
-                Vector2.Distance(
-                    startPosition,
-                    evt.position);
+            if (!CanStartManipulation(evt))
+                return;
+
+            active = true;
+            dragging = false;
+            pointerId = evt.pointerId;
+            startPosition = evt.position;
+
+            target.CapturePointer(pointerId);
+
+            // Do not stop propagation here. Button.clicked must still work
+            // when the user performs a normal click rather than a drag.
+        }
+
+        private void OnPointerMove(PointerMoveEvent evt)
+        {
+            if (!active ||
+                !target.HasPointerCapture(pointerId))
+            {
+                return;
+            }
 
             if (!dragging &&
-                distance > 8f)
+                Vector2.Distance(startPosition, evt.position) >= 8f)
             {
                 dragging = true;
-
-                source.AddToClassList(
-                    "dragging-player");
+                target.AddToClassList("dragging-player");
             }
 
             if (dragging)
@@ -75,32 +94,59 @@ namespace FootballTactics.UI
             }
         }
 
-        private void OnPointerUp(
-            PointerUpEvent evt)
+        private void OnPointerUp(PointerUpEvent evt)
         {
-            if (!pointerDown)
-                return;
-
-            if (dragging)
+            if (!active ||
+                !target.HasPointerCapture(pointerId) ||
+                !CanStopManipulation(evt))
             {
-                onDrop(
-                    evt.position);
+                return;
             }
 
-            pointerDown = false;
+            bool wasDragging = dragging;
+            Vector2 dropPosition = evt.position;
+
+            active = false;
             dragging = false;
 
-            source.RemoveFromClassList(
-                "dragging-player");
+            target.RemoveFromClassList("dragging-player");
+            target.ReleasePointer(pointerId);
+            pointerId = -1;
 
-            if (source.HasPointerCapture(
-                    evt.pointerId))
+            if (wasDragging)
             {
-                source.ReleasePointer(
-                    evt.pointerId);
+                onDrop?.Invoke(dropPosition);
+                evt.StopPropagation();
+            }
+            // A non-drag release intentionally propagates so UI Toolkit can
+            // generate the normal Button ClickEvent/clicked callback.
+        }
+
+        private void OnPointerCancel(PointerCancelEvent evt)
+        {
+            CancelDrag();
+        }
+
+        private void OnPointerCaptureOut(PointerCaptureOutEvent evt)
+        {
+            if (active)
+                CancelDrag();
+        }
+
+        private void CancelDrag()
+        {
+            active = false;
+            dragging = false;
+
+            target.RemoveFromClassList("dragging-player");
+
+            if (pointerId >= 0 &&
+                target.HasPointerCapture(pointerId))
+            {
+                target.ReleasePointer(pointerId);
             }
 
-            evt.StopPropagation();
+            pointerId = -1;
         }
     }
 }
