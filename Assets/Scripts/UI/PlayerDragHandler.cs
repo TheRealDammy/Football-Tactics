@@ -5,12 +5,13 @@ using UnityEngine.UIElements;
 namespace FootballTactics.UI
 {
     /// <summary>
-    /// UI Toolkit drag detector that coexists with Button.clicked.
-    /// PointerDown is registered during trickle-down because Button's own
-    /// Clickable manipulator intentionally stops the event at the target.
+    /// UI Toolkit drag detector for player buttons.
+    /// The drag starts on the source element, but release is observed from the
+    /// root so moving over another Button cannot swallow the pointer-up event.
     /// </summary>
     public sealed class PlayerDragHandler : PointerManipulator
     {
+        private readonly VisualElement root;
         private readonly Action onDragStarted;
         private readonly Action<Vector2> onDrop;
         private readonly Action onDragCancelled;
@@ -27,16 +28,16 @@ namespace FootballTactics.UI
             Action onDragStarted = null,
             Action onDragCancelled = null)
         {
+            this.root = root;
             this.onDrop = onDrop;
             this.onDragStarted = onDragStarted;
             this.onDragCancelled = onDragCancelled;
             target = source;
 
-            activators.Add(
-                new ManipulatorActivationFilter
-                {
-                    button = MouseButton.LeftMouse
-                });
+            activators.Add(new ManipulatorActivationFilter
+            {
+                button = MouseButton.LeftMouse
+            });
 
             source.AddManipulator(this);
         }
@@ -48,9 +49,13 @@ namespace FootballTactics.UI
                 TrickleDown.TrickleDown);
 
             target.RegisterCallback<PointerMoveEvent>(OnPointerMove);
-            target.RegisterCallback<PointerUpEvent>(OnPointerUp);
-            target.RegisterCallback<PointerCancelEvent>(OnPointerCancel);
-            target.RegisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
+
+            // PointerUp is also registered on the root. This is important when
+            // the pointer moves over another Button while dragging.
+            root.RegisterCallback<PointerUpEvent>(OnRootPointerUp,
+                TrickleDown.TrickleDown);
+            root.RegisterCallback<PointerCancelEvent>(OnRootPointerCancel,
+                TrickleDown.TrickleDown);
         }
 
         protected override void UnregisterCallbacksFromTarget()
@@ -60,9 +65,10 @@ namespace FootballTactics.UI
                 TrickleDown.TrickleDown);
 
             target.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
-            target.UnregisterCallback<PointerUpEvent>(OnPointerUp);
-            target.UnregisterCallback<PointerCancelEvent>(OnPointerCancel);
-            target.UnregisterCallback<PointerCaptureOutEvent>(OnPointerCaptureOut);
+            root.UnregisterCallback<PointerUpEvent>(OnRootPointerUp,
+                TrickleDown.TrickleDown);
+            root.UnregisterCallback<PointerCancelEvent>(OnRootPointerCancel,
+                TrickleDown.TrickleDown);
         }
 
         private void OnPointerDown(PointerDownEvent evt)
@@ -80,11 +86,8 @@ namespace FootballTactics.UI
 
         private void OnPointerMove(PointerMoveEvent evt)
         {
-            if (!active ||
-                !target.HasPointerCapture(pointerId))
-            {
+            if (!active || evt.pointerId != pointerId)
                 return;
-            }
 
             if (!dragging &&
                 Vector2.Distance(startPosition, evt.position) >= 8f)
@@ -98,23 +101,16 @@ namespace FootballTactics.UI
                 evt.StopPropagation();
         }
 
-        private void OnPointerUp(PointerUpEvent evt)
+        private void OnRootPointerUp(PointerUpEvent evt)
         {
-            if (!active ||
-                !target.HasPointerCapture(pointerId) ||
+            if (!active || evt.pointerId != pointerId ||
                 !CanStopManipulation(evt))
-            {
                 return;
-            }
 
-            bool wasDragging = dragging;
             Vector2 dropPosition = evt.position;
+            bool wasDragging = dragging;
 
-            active = false;
-            dragging = false;
-            target.RemoveFromClassList("dragging-player");
-            target.ReleasePointer(pointerId);
-            pointerId = -1;
+            FinishPointer();
 
             if (wasDragging)
             {
@@ -123,32 +119,30 @@ namespace FootballTactics.UI
             }
         }
 
-        private void OnPointerCancel(PointerCancelEvent evt)
+        private void OnRootPointerCancel(PointerCancelEvent evt)
         {
+            if (!active || evt.pointerId != pointerId)
+                return;
+
             CancelDrag();
         }
 
-        private void OnPointerCaptureOut(PointerCaptureOutEvent evt)
+        private void FinishPointer()
         {
-            if (active)
-                CancelDrag();
+            active = false;
+            dragging = false;
+            target.RemoveFromClassList("dragging-player");
+
+            if (pointerId >= 0 && target.HasPointerCapture(pointerId))
+                target.ReleasePointer(pointerId);
+
+            pointerId = -1;
         }
 
         private void CancelDrag()
         {
             bool wasDragging = dragging;
-
-            active = false;
-            dragging = false;
-            target.RemoveFromClassList("dragging-player");
-
-            if (pointerId >= 0 &&
-                target.HasPointerCapture(pointerId))
-            {
-                target.ReleasePointer(pointerId);
-            }
-
-            pointerId = -1;
+            FinishPointer();
 
             if (wasDragging)
                 onDragCancelled?.Invoke();
