@@ -5,9 +5,9 @@ using UnityEngine.UIElements;
 namespace FootballTactics.UI
 {
     /// <summary>
-    /// UI Toolkit drag detector that preserves normal Button clicks.
-    /// A short press is still handled by the Button; a drag captures the
-    /// pointer and invokes the supplied drop callback on release.
+    /// UI Toolkit drag detector that coexists with Button.clicked.
+    /// PointerDown is registered during trickle-down because Button's own
+    /// Clickable manipulator intentionally stops the event at the target.
     /// </summary>
     public sealed class PlayerDragHandler : PointerManipulator
     {
@@ -24,7 +24,6 @@ namespace FootballTactics.UI
             Action<Vector2> onDrop)
         {
             this.onDrop = onDrop;
-
             target = source;
 
             activators.Add(
@@ -38,7 +37,10 @@ namespace FootballTactics.UI
 
         protected override void RegisterCallbacksOnTarget()
         {
-            target.RegisterCallback<PointerDownEvent>(OnPointerDown);
+            target.RegisterCallback<PointerDownEvent>(
+                OnPointerDown,
+                TrickleDown.TrickleDown);
+
             target.RegisterCallback<PointerMoveEvent>(OnPointerMove);
             target.RegisterCallback<PointerUpEvent>(OnPointerUp);
             target.RegisterCallback<PointerCancelEvent>(OnPointerCancel);
@@ -47,7 +49,10 @@ namespace FootballTactics.UI
 
         protected override void UnregisterCallbacksFromTarget()
         {
-            target.UnregisterCallback<PointerDownEvent>(OnPointerDown);
+            target.UnregisterCallback<PointerDownEvent>(
+                OnPointerDown,
+                TrickleDown.TrickleDown);
+
             target.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
             target.UnregisterCallback<PointerUpEvent>(OnPointerUp);
             target.UnregisterCallback<PointerCancelEvent>(OnPointerCancel);
@@ -56,10 +61,7 @@ namespace FootballTactics.UI
 
         private void OnPointerDown(PointerDownEvent evt)
         {
-            if (active)
-                return;
-
-            if (!CanStartManipulation(evt))
+            if (active || !CanStartManipulation(evt))
                 return;
 
             active = true;
@@ -68,9 +70,6 @@ namespace FootballTactics.UI
             startPosition = evt.position;
 
             target.CapturePointer(pointerId);
-
-            // Do not stop propagation here. Button.clicked must still work
-            // when the user performs a normal click rather than a drag.
         }
 
         private void OnPointerMove(PointerMoveEvent evt)
@@ -89,9 +88,7 @@ namespace FootballTactics.UI
             }
 
             if (dragging)
-            {
                 evt.StopPropagation();
-            }
         }
 
         private void OnPointerUp(PointerUpEvent evt)
@@ -108,7 +105,6 @@ namespace FootballTactics.UI
 
             active = false;
             dragging = false;
-
             target.RemoveFromClassList("dragging-player");
             target.ReleasePointer(pointerId);
             pointerId = -1;
@@ -118,8 +114,6 @@ namespace FootballTactics.UI
                 onDrop?.Invoke(dropPosition);
                 evt.StopPropagation();
             }
-            // A non-drag release intentionally propagates so UI Toolkit can
-            // generate the normal Button ClickEvent/clicked callback.
         }
 
         private void OnPointerCancel(PointerCancelEvent evt)
@@ -137,7 +131,6 @@ namespace FootballTactics.UI
         {
             active = false;
             dragging = false;
-
             target.RemoveFromClassList("dragging-player");
 
             if (pointerId >= 0 &&
