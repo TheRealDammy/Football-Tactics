@@ -26,6 +26,7 @@ namespace FootballTactics.UI
 
         private Label formationFitLabel;
         private Label formationFitSummary;
+        private Label dragStatusLabel;
 
         private readonly List<LineupSlotView> slotViews = new();
         private readonly List<PlayerDragHandler> dragHandlers = new();
@@ -41,6 +42,7 @@ namespace FootballTactics.UI
             root = document.rootVisualElement;
             FindElements();
             RegisterEvents();
+            CreateDragStatusLabel();
         }
 
         private void Start()
@@ -59,6 +61,39 @@ namespace FootballTactics.UI
             resetLineupButton = root.Q<Button>("resetLineupButton");
             formationFitLabel = root.Q<Label>("formationFitLabel");
             formationFitSummary = root.Q<Label>("formationFitSummary");
+        }
+
+        private void CreateDragStatusLabel()
+        {
+            dragStatusLabel = root.Q<Label>("dragStatusLabel");
+
+            if (dragStatusLabel == null)
+            {
+                dragStatusLabel = new Label("DRAG: idle");
+                dragStatusLabel.name = "dragStatusLabel";
+                root.Add(dragStatusLabel);
+            }
+
+            dragStatusLabel.style.position = Position.Absolute;
+            dragStatusLabel.style.top = 8;
+            dragStatusLabel.style.right = 8;
+            dragStatusLabel.style.paddingLeft = 10;
+            dragStatusLabel.style.paddingRight = 10;
+            dragStatusLabel.style.paddingTop = 6;
+            dragStatusLabel.style.paddingBottom = 6;
+            dragStatusLabel.style.backgroundColor = new Color(0.04f, 0.05f, 0.07f, 0.92f);
+            dragStatusLabel.style.color = Color.white;
+            dragStatusLabel.style.fontSize = 12;
+            dragStatusLabel.style.unityFontStyleAndWeight = FontStyle.Bold;
+            dragStatusLabel.pickingMode = PickingMode.Ignore;
+        }
+
+        private void SetDragStatus(string message)
+        {
+            if (dragStatusLabel != null)
+                dragStatusLabel.text = message;
+
+            Debug.Log($"[Lineup Drag] {message}");
         }
 
         private void RegisterEvents()
@@ -446,24 +481,40 @@ namespace FootballTactics.UI
             dragHandlers.Add(new PlayerDragHandler(
                 root,
                 button,
-                position => HandleBenchDrop(player, position)));
+                position => HandleBenchDrop(player, position),
+                () => SetDragStatus($"DRAG DETECTED: {player.Name}"),
+                () => SetDragStatus("DRAG CANCELLED")));
         }
 
         private void RegisterPlayerDrag(LineupSlotView slotView)
         {
+            string playerName = slotView.Player?.Name ?? slotView.Slot.Id;
+
             dragHandlers.Add(new PlayerDragHandler(
                 root,
                 slotView.Button,
-                position => HandlePlayerDrop(slotView, position)));
+                position => HandlePlayerDrop(slotView, position),
+                () => SetDragStatus($"DRAG DETECTED: {playerName}"),
+                () => SetDragStatus("DRAG CANCELLED")));
         }
 
         private void HandleBenchDrop(Player player, Vector2 position)
         {
             LineupSlotView target = FindSlotAtPosition(position);
-            if (target == null ||
-                !LineupBuilder.CanPlayerPlaySlot(player, target.Slot))
-                return;
 
+            if (target == null)
+            {
+                SetDragStatus("DROP RECEIVED — no pitch slot detected");
+                return;
+            }
+
+            if (!LineupBuilder.CanPlayerPlaySlot(player, target.Slot))
+            {
+                SetDragStatus($"DROP REJECTED — {player.Name} cannot play {target.Slot.Id}");
+                return;
+            }
+
+            SetDragStatus($"DROP ACCEPTED — {player.Name} → {target.Slot.Id}");
             AssignPlayer(target.Slot, player);
         }
 
@@ -472,14 +523,36 @@ namespace FootballTactics.UI
             if (benchContainer != null &&
                 benchContainer.worldBound.Contains(position))
             {
+                SetDragStatus($"DROP ACCEPTED — {source.Slot.Id} → BENCH");
                 RemovePlayerFromSlot(source);
                 return;
             }
 
             LineupSlotView target = FindSlotAtPosition(position);
             if (target == null)
+            {
+                SetDragStatus("DROP RECEIVED — no pitch slot detected");
                 return;
+            }
 
+            if (target == source)
+            {
+                SetDragStatus("DROP RECEIVED — same slot");
+                return;
+            }
+
+            Player sourcePlayer = source.Player;
+            Player targetPlayer = target.Player;
+
+            if (!LineupBuilder.CanPlayerPlaySlot(sourcePlayer, target.Slot) ||
+                (targetPlayer != null &&
+                 !LineupBuilder.CanPlayerPlaySlot(targetPlayer, source.Slot)))
+            {
+                SetDragStatus("DROP REJECTED — players are not compatible with the target slots");
+                return;
+            }
+
+            SetDragStatus($"DROP ACCEPTED — {sourcePlayer.Name} ↔ {targetPlayer?.Name ?? target.Slot.Id}");
             SwapPlayers(source, target);
         }
 
