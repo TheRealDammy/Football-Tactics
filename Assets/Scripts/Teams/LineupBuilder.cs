@@ -14,7 +14,11 @@ namespace FootballTactics.Teams
             FormationDefinition definition = formation.GetDefinition();
             Lineup lineup = new Lineup(formation);
             HashSet<Player> usedPlayers = new();
-            IReadOnlyList<Player> squad = team.GetFullSquad();
+
+            // Automatic formation changes must not silently pull players from
+            // the bench into the XI. The team.Players collection represents
+            // the current XI during a match; the bench remains the bench.
+            IReadOnlyList<Player> squad = team.Players;
 
             foreach (FormationSlot slot in definition.Slots.OrderBy(GetSlotPriority))
             {
@@ -155,10 +159,6 @@ namespace FootballTactics.Teams
 
         private static int GetSlotPriority(FormationSlot slot)
         {
-            // Prioritise the two central midfield slots before wide midfield
-            // so a 4-4-2 with three natural midfielders can still use a
-            // winger as the fourth midfielder. This prevents LM/RM becoming
-            // empty after the CMs consume every midfielder.
             return slot.Id switch
             {
                 "GK" => 0,
@@ -167,6 +167,8 @@ namespace FootballTactics.Teams
                 "LB" => 2,
                 "RB" => 2,
 
+                // In a 4-4-2 we want two natural central midfielders first,
+                // then use a third midfielder/winger for the wide positions.
                 "LDM" => 3,
                 "RDM" => 3,
                 "LCM" => 3,
