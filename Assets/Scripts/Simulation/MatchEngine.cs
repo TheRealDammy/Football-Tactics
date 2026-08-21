@@ -219,6 +219,18 @@ namespace FootballTactics.Simulation
                 return false;
             }
 
+            FormationSlot slot = GetSlotForPlayer(homeLineup, oldPlayer);
+
+            if (slot == null)
+                return false;
+
+            if (!LineupBuilder.CanPlayerPlaySlot(
+                    newPlayer,
+                    slot))
+            {
+                return false;
+            }
+
             homeLineup.ReplacePlayer(
                 oldPlayer,
                 newPlayer);
@@ -984,6 +996,26 @@ namespace FootballTactics.Simulation
                 Formation.FourTwoThreeOne => "4-2-3-1",
                 _ => "4-3-3"
             };
+        }
+
+        private FormationSlot GetSlotForPlayer(Lineup lineup, Player player)
+        {
+            foreach (var assignment
+                in lineup.Assignments)
+            {
+                if (assignment.Value != player)
+                    continue;
+
+                foreach (
+                    FormationSlot slot
+                    in lineup.Formation.GetDefinition().Slots)
+                {
+                    if (slot.Id == assignment.Key)
+                        return slot;
+                }
+            }
+
+            return null;
         }
     }
 }

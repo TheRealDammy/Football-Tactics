@@ -455,6 +455,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FootballTactics.UI.MatchScreenController
   matchSimulator: {fileID: 2031563359}
+  matchScreen: {fileID: 1601631194}
+  lineupScreen: {fileID: 1994636954}
 --- !u!1 &1994636954
 GameObject:
   m_ObjectHideFlags: 0

@@ -29,7 +29,12 @@ namespace FootballTactics.UI
         private Button startMatchButton;
         private Button resetLineupButton;
 
+        private Label formationFitLabel;
+        private Label formationFitSummary;
+
         private readonly List<LineupSlotView> slotViews = new();
+
+        private readonly List<PlayerDragHandler> dragHandlers = new();
 
         private Formation currentFormation;
 
@@ -38,6 +43,7 @@ namespace FootballTactics.UI
         private LineupSlotView selectedSlot;
 
         private Player selectedStarter;
+        private Lineup currentLineup;
 
         private void Awake()
         {
@@ -82,6 +88,11 @@ namespace FootballTactics.UI
 
             resetLineupButton =
                 root.Q<Button>("resetLineupButton");
+            formationFitLabel =
+                root.Q<Label>("formationFitLabel");
+
+            formationFitSummary =
+                root.Q<Label>("formationFitSummary");
         }
 
         private void RegisterEvents()
@@ -121,7 +132,14 @@ namespace FootballTactics.UI
 
             lineupContainer.Clear();
 
+            dragHandlers.Clear();
+
             Lineup lineup =
+                LineupBuilder.BuildRecommendedLineup(
+                    matchSimulator.HomeTeam,
+                    currentFormation);
+
+            currentLineup =
                 LineupBuilder.BuildRecommendedLineup(
                     matchSimulator.HomeTeam,
                     currentFormation);
@@ -150,6 +168,9 @@ namespace FootballTactics.UI
                     SelectSlot(slotView);
                 };
 
+                RegisterPlayerDrag(
+                    slotView);
+
                 PositionSlotButton(button,slot);
 
                 lineupContainer.Add(button);
@@ -160,6 +181,7 @@ namespace FootballTactics.UI
             UpdatePlayerPanel();
             BuildBench();
             UpdateFormationLabel();
+            UpdateFormationFit();
         }
 
         private void BuildBench()
@@ -169,41 +191,48 @@ namespace FootballTactics.UI
 
             benchContainer.Clear();
 
+            if (currentLineup == null)
+                return;
+
             foreach (Player player
-                in matchSimulator.HomeTeam.Bench)
+                in matchSimulator.HomeTeam.GetFullSquad())
             {
-                Button button = new();
+                if (currentLineup.HasPlayer(player))
+                    continue;
+
+                Button button =
+                    new();
 
                 button.text =
-                    $"{player.Name}\n" +
-                    $"{FormatPosition(player.Position)}   " +
-                    $"{player.Fitness}%";
+                        $"{player.Name}   " +
+                        $"{FormatPosition(player.Position)}   " +
+                        $"FIT {player.Fitness}%";
 
                 button.AddToClassList(
                     "bench-player");
+
+                benchContainer.Add(button);
+
+                RegisterBenchDrag(
+                    button,
+                    player);
 
                 button.clicked += () =>
                 {
                     if (selectedSlot == null)
                         return;
 
-                    if (player.Position !=
-                        selectedSlot.Slot.RequiredPosition)
+                    if (!LineupBuilder.CanPlayerPlaySlot(
+                            player,
+                            selectedSlot.Slot))
                     {
                         return;
                     }
 
-                    SubstituteSelectedPlayer(
+                    AssignPlayer(
+                        selectedSlot.Slot,
                         player);
                 };
-
-                if (matchSimulator.HomeTeam.Bench.Count > 6)
-                {
-                    Debug.LogWarning(
-                        "Bench contains more than six players.");
-                }
-
-                benchContainer.Add(button);
             }
         }
 
@@ -350,6 +379,7 @@ namespace FootballTactics.UI
             // Refresh everything.
             BuildBench();
             UpdatePlayerPanel();
+            UpdateFormationFit();
 
             HighlightEligibleBenchPlayers();
 
@@ -426,6 +456,24 @@ namespace FootballTactics.UI
                     Length.Percent(-50));
         }
 
+        private void UpdateFormationFit()
+        {
+            Lineup lineup =
+                LineupBuilder.BuildRecommendedLineup(
+                    matchSimulator.HomeTeam,
+                    currentFormation);
+
+            FormationFitResult result =
+                FormationCompatibility.Calculate(
+                    lineup);
+
+            formationFitLabel.text =
+                $"{result.Score:F0}%";
+
+            formationFitSummary.text =
+                result.Summary;
+        }
+
         private Button CreatePlayerButton(
             Player player,
             FormationSlot slot)
@@ -451,10 +499,17 @@ namespace FootballTactics.UI
             return button;
         }
 
-        private void AssignPlayer(FormationSlot slot, Player player)
+        private void AssignPlayer( FormationSlot slot, Player player)
         {
-            // Remove this player from any other slot.
-            foreach (LineupSlotView slotView in slotViews)
+            if (!LineupBuilder.CanPlayerPlaySlot(
+                    player,
+                    slot))
+            {
+                return;
+            }
+
+            foreach (LineupSlotView slotView
+                in slotViews)
             {
                 if (slotView.Player == player &&
                     slotView.Slot.Id != slot.Id)
@@ -463,8 +518,12 @@ namespace FootballTactics.UI
                 }
             }
 
-            // Assign player to selected slot.
-            foreach (LineupSlotView slotView in slotViews)
+            currentLineup.Assign(
+                slot,
+                player);
+
+            foreach (LineupSlotView slotView
+                in slotViews)
             {
                 if (slotView.Slot.Id == slot.Id)
                 {
@@ -473,7 +532,8 @@ namespace FootballTactics.UI
                 }
             }
 
-            UpdatePlayerPanel();
+            BuildBench();
+            UpdateFormationFit();
         }
 
         private void UpdateFormationLabel()
@@ -584,6 +644,128 @@ namespace FootballTactics.UI
                 PlayerPosition.Attacker => "ATT",
                 _ => position.ToString()
             };
+        }
+
+        private void RegisterBenchDrag(Button button, Player player)
+        {
+            PlayerDragHandler handler =
+                new(
+                    root,
+                    button,
+                    position =>
+                    {
+                        HandleBenchDrop(
+                            player,
+                            position);
+                    });
+
+            dragHandlers.Add(handler);
+        }
+
+        private void RegisterPlayerDrag( LineupSlotView slotView)
+        {
+            PlayerDragHandler handler =
+                new(
+                    root,
+                    slotView.Button,
+                    position =>
+                    {
+                        HandlePlayerDrop(
+                            slotView,
+                            position);
+                    });
+
+            dragHandlers.Add(handler);
+        }
+
+        private void HandleBenchDrop( Player player, Vector2 position)
+        {
+            LineupSlotView target =
+                FindSlotAtPosition(position);
+
+            if (target == null)
+                return;
+
+            if (!LineupBuilder.CanPlayerPlaySlot(
+                    player,
+                    target.Slot))
+            {
+                return;
+            }
+
+            AssignPlayer(
+                target.Slot,
+                player);
+        }
+
+        private void HandlePlayerDrop( LineupSlotView source, Vector2 position)
+        {
+            LineupSlotView target =
+                FindSlotAtPosition(position);
+
+            if (target == null ||
+                target == source)
+            {
+                return;
+            }
+
+            if (source.Player == null ||
+                target.Player == null)
+            {
+                return;
+            }
+
+            Player sourcePlayer =
+                source.Player;
+
+            Player targetPlayer =
+                target.Player;
+
+            if (!LineupBuilder.CanPlayerPlaySlot(
+                    sourcePlayer,
+                    target.Slot))
+            {
+                return;
+            }
+
+            if (!LineupBuilder.CanPlayerPlaySlot(
+                    targetPlayer,
+                    source.Slot))
+            {
+                return;
+            }
+
+            source.SetPlayer(targetPlayer);
+            target.SetPlayer(sourcePlayer);
+
+            currentLineup.Assign(
+                source.Slot,
+                targetPlayer);
+
+            currentLineup.Assign(
+                target.Slot,
+                sourcePlayer);
+
+            BuildBench();
+
+            UpdateFormationFit();
+        }
+
+        private LineupSlotView FindSlotAtPosition( Vector2 position)
+        {
+            foreach (LineupSlotView slotView
+                in slotViews)
+            {
+                Rect worldRect =
+                    slotView.Button.worldBound;
+
+                if (worldRect.Contains(position))
+                {
+                    return slotView;
+                }
+            }
+
+            return null;
         }
     }
 }

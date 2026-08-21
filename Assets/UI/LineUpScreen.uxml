@@ -10,6 +10,11 @@
                 <ui:Label name="formationSummaryLabel" text="4-3-3" class="formation-label"/>
                 <ui:DropdownField name="formationDropdown" choices="4-4-2,4-3-3,4-2-3-1" value="4-3-3" class="formation-dropdown"/>
             </ui:VisualElement>
+            <ui:VisualElement class="formation-fit">
+                <ui:Label text="FORMATION FIT" class="fit-title" />
+                <ui:Label name="formationFitLabel" text="--%" class="fit-score" />
+                <ui:Label name="formationFitSummary" text="" class="fit-summary" />
+            </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement class="main">
             <ui:VisualElement name="pitch" class="pitch">

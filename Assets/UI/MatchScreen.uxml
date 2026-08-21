@@ -114,8 +114,27 @@
         </ui:VisualElement>
         <ui:VisualElement name="fullTimeOverlay" class="full-time-overlay">
             <ui:VisualElement name="fullTimeDialog" class="full-time-dialog">
-                <ui:Label name="fullTimeLabel" text="FULL TIME" class="full-time"/>
-                <ui:Label text="Match complete" class="full-time-subtitle"/>
+                <ui:Label text="FULL TIME" class="full-time" />
+                <ui:Label name="finalScoreLabel" text="0 - 0" class="final-score" />
+                <ui:Label name="finalResultLabel" text="" class="final-result" />
+                <ui:VisualElement class="result-stats">
+                    <ui:VisualElement class="result-stat">
+                        <ui:Label text="POSSESSION" class="result-stat-title" />
+                        <ui:Label name="finalPossessionLabel" text="50% - 50%" class="result-stat-value" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="result-stat">
+                        <ui:Label text="SHOTS" class="result-stat-title" />
+                        <ui:Label name="finalShotsLabel" text="0 - 0" class="result-stat-value" />
+                    </ui:VisualElement>
+                    <ui:VisualElement class="result-stat">
+                        <ui:Label text="xG" class="result-stat-title" />
+                        <ui:Label name="finalXgLabel" text="0.00 - 0.00" class="result-stat-value" />
+                    </ui:VisualElement>
+                </ui:VisualElement>
+                <ui:VisualElement class="result-actions">
+                    <ui:Button name="playAgainButton" text="PLAY AGAIN" class="result-button" />
+                    <ui:Button name="returnToTeamButton" text="TEAM SELECTION" class="result-button secondary-result-button" />
+                </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
     </ui:VisualElement>

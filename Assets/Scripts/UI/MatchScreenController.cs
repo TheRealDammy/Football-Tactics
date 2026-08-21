@@ -10,6 +10,11 @@ namespace FootballTactics.UI
     {
         [SerializeField]
         private MatchSimulator matchSimulator;
+        [SerializeField]
+        private GameObject matchScreen;
+
+        [SerializeField]
+        private GameObject lineupScreen;
 
         private UIDocument document;
         private VisualElement root;
@@ -30,6 +35,11 @@ namespace FootballTactics.UI
         private Label defensiveLineLabel;
         private Label fitnessLabel;
         private Label substitutionCountLabel;
+        private Label finalScoreLabel;
+        private Label finalResultLabel;
+        private Label finalPossessionLabel;
+        private Label finalShotsLabel;
+        private Label finalXgLabel;
 
         private ScrollView eventList;
         private Label fullTimeLabel;
@@ -46,6 +56,7 @@ namespace FootballTactics.UI
         private Player selectedPlayerOn;
 
         private int displayedEvents;
+        private bool resultShown;
 
         private VisualElement tacticalDecisionOverlay;
         private Label tacticalDecisionTitle;
@@ -154,13 +165,20 @@ namespace FootballTactics.UI
             tacticalDecisionOptions =
                 root.Q<VisualElement>(
                     "tacticalDecisionOptions");
+            finalScoreLabel =
+                root.Q<Label>("finalScoreLabel");
 
-            Debug.Log(
-                $"Tactical UI: " +
-                $"Overlay={tacticalDecisionOverlay != null}, " +
-                $"Title={tacticalDecisionTitle != null}, " +
-                $"Description={tacticalDecisionDescription != null}, " +
-                $"Options={tacticalDecisionOptions != null}");
+            finalResultLabel =
+                root.Q<Label>("finalResultLabel");
+
+            finalPossessionLabel =
+                root.Q<Label>("finalPossessionLabel");
+
+            finalShotsLabel =
+                root.Q<Label>("finalShotsLabel");
+
+            finalXgLabel =
+                root.Q<Label>("finalXgLabel");
         }
 
         private void RegisterButtons()
@@ -257,6 +275,11 @@ namespace FootballTactics.UI
                     matchSimulator.SetFormation(
                         Formation.FourTwoThreeOne);
                 };
+            root.Q<Button>("playAgainButton")
+                .clicked += RestartMatch;
+
+            root.Q<Button>("returnToTeamButton")
+                .clicked += ReturnToTeamSelection;
         }
 
         private void UpdateScreen()
@@ -375,11 +398,7 @@ namespace FootballTactics.UI
             {
                 if (state.Minute >= 90)
                 {
-                    if (fullTimeLabel != null)
-                        fullTimeLabel.text = "FULL TIME";
-
-                    fullTimeOverlay.style.display =
-                        DisplayStyle.Flex;
+                    ShowFullTimeResult(engine);
                 }
                 else
                 {
@@ -453,38 +472,86 @@ namespace FootballTactics.UI
             MatchEngine engine =
                 matchSimulator.Engine;
 
-            foreach (Player player in engine.HomeTeam.Players)
+            foreach (Player player
+                in engine.HomeLineup.Assignments.Values)
             {
-                Button button =
+                playerOffList.Add(
                     CreatePlayerButton(
                         player,
-                        true);
-
-                playerOffList.Add(button);
+                        true));
             }
 
-            foreach (Player player in engine.HomeTeam.Bench)
+            if (selectedPlayerOff == null)
             {
-                Button button =
+                foreach (Player player
+                    in engine.HomeTeam.Bench)
+                {
+                    playerOnList.Add(
+                        CreatePlayerButton(
+                            player,
+                            false));
+                }
+
+                return;
+            }
+
+            FormationSlot slot =
+                GetSlotForPlayer(
+                    engine.HomeLineup,
+                    selectedPlayerOff);
+
+            if (slot == null)
+                return;
+
+            foreach (Player player
+                in engine.HomeTeam.Bench)
+            {
+                if (!LineupBuilder.CanPlayerPlaySlot(
+                        player,
+                        slot))
+                {
+                    continue;
+                }
+
+                playerOnList.Add(
                     CreatePlayerButton(
                         player,
-                        false);
-
-                playerOnList.Add(button);
+                        false));
             }
         }
 
-        private Button CreatePlayerButton( Player player, bool playerOff)
+        private FormationSlot GetSlotForPlayer( Lineup lineup, Player player)
         {
-            string text =
-                $"{player.Name}\n" +
-                $"{FormatPosition(player.Position)}    " +
-                $"FIT {player.Fitness}%";
+            foreach (var assignment
+                in lineup.Assignments)
+            {
+                if (assignment.Value != player)
+                    continue;
 
+                foreach (
+                    FormationSlot slot
+                    in lineup.Formation.GetDefinition().Slots)
+                {
+                    if (slot.Id == assignment.Key)
+                        return slot;
+                }
+            }
+
+            return null;
+        }
+
+        private Button CreatePlayerButton(Player player, bool playerOff)
+        {
             Button button =
-                new Button(() => { });
+                new();
 
-            button.AddToClassList("player-button");
+            button.text =
+                $"{player.Name}  •  " +
+                $"{FormatPosition(player.Position)}  •  " +
+                $"{player.Fitness}%";
+
+            button.AddToClassList(
+                "player-button");
 
             button.clicked += () =>
             {
@@ -497,7 +564,6 @@ namespace FootballTactics.UI
                     selectedPlayerOn = player;
                 }
 
-                RefreshSelectionVisuals();
                 UpdateSelectedSubstitutionText();
             };
 
@@ -661,6 +727,71 @@ namespace FootballTactics.UI
 
             tacticalDecisionOverlay.style.display =
                 DisplayStyle.Flex;
+        }
+
+        private void ShowFullTimeResult( MatchEngine engine)
+        {
+            if (resultShown)
+                return;
+
+            resultShown = true;
+
+            MatchState state =
+                engine.State;
+
+            finalScoreLabel.text =
+                $"{state.HomeGoals} - {state.AwayGoals}";
+
+            if (state.HomeGoals > state.AwayGoals)
+            {
+                finalResultLabel.text =
+                    "VICTORY";
+            }
+            else if (state.HomeGoals < state.AwayGoals)
+            {
+                finalResultLabel.text =
+                    "DEFEAT";
+            }
+            else
+            {
+                finalResultLabel.text =
+                    "DRAW";
+            }
+
+            finalPossessionLabel.text =
+                $"{state.HomePossession:F0}% - " +
+                $"{state.AwayPossession:F0}%";
+
+            finalShotsLabel.text =
+                $"{state.HomeShots} - " +
+                $"{state.AwayShots}";
+
+            finalXgLabel.text =
+                $"{state.HomeXG:F2} - " +
+                $"{state.AwayXG:F2}";
+
+            fullTimeOverlay.style.display =
+                DisplayStyle.Flex;
+        }
+
+        private void ReturnToTeamSelection()
+        {
+            fullTimeOverlay.style.display =
+                DisplayStyle.None;
+
+            matchScreen.SetActive(false);
+            lineupScreen.SetActive(true);
+        }
+
+        private void RestartMatch()
+        {
+            resultShown = false;
+
+            fullTimeOverlay.style.display =
+                DisplayStyle.None;
+
+            matchScreen.SetActive(false);
+            lineupScreen.SetActive(true);
         }
     }
 }

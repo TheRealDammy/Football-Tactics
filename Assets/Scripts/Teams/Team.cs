@@ -31,6 +31,49 @@ namespace FootballTactics.Teams
             SubstitutedPlayers = new List<Player>();
         }
 
+        public List<Player> GetFullSquad()
+        {
+            return Players
+                .Concat(Bench)
+                .Concat(SubstitutedPlayers)
+                .Distinct()
+                .ToList();
+        }
+
+        public bool ApplyStartingLineup(Lineup lineup)
+        {
+            List<Player> squad =
+                GetFullSquad();
+
+            List<Player> starters =
+                lineup.Assignments.Values
+                    .Distinct()
+                    .ToList();
+
+            if (starters.Count != 11)
+                return false;
+
+            Players.Clear();
+            Players.AddRange(starters);
+
+            Bench.Clear();
+
+            foreach (Player player in squad)
+            {
+                if (starters.Contains(player))
+                    continue;
+
+                if (Bench.Count >= 6)
+                    break;
+
+                Bench.Add(player);
+            }
+
+            SubstitutedPlayers.Clear();
+
+            return true;
+        }
+
         public float AverageAttack =>
             (float)GetPlayersOfType(PlayerPosition.Attacker)
                 .Select(p => p.Attack)
@@ -88,10 +131,6 @@ namespace FootballTactics.Teams
                     p => p.Name == playerOnName);
 
             if (playerOff == null || playerOn == null)
-                return false;
-
-            // Basic position validation.
-            if (playerOff.Position != playerOn.Position)
                 return false;
 
             Players.Remove(playerOff);

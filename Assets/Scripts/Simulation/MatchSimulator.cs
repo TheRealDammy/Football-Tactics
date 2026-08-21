@@ -74,6 +74,14 @@ namespace FootballTactics.Simulation
 
             Lineup homeLineup = LineupBuilder.BuildFromSlotViews(formation,  slotViews);
 
+            if (!homeTeam.ApplyStartingLineup(homeLineup))
+            {
+                Debug.LogError(
+                    "Unable to apply starting lineup.");
+
+                return;
+            }
+
             matchEngine =
                 new MatchEngine(
                     homeTeam,

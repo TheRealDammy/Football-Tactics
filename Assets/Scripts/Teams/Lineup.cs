@@ -74,5 +74,18 @@ namespace FootballTactics.Teams
 
             return true;
         }
+
+        public FormationArea GetFormationArea(string slotId)
+        {
+            foreach (
+                FormationSlot slot
+                in Formation.GetDefinition().Slots)
+            {
+                if (slot.Id == slotId)
+                    return slot.Area;
+            }
+
+            return FormationArea.CentreMidfield;
+        }
     }
 }

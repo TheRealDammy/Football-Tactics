@@ -515,13 +515,12 @@
 .player-button {
     width: 100%;
 
-    height: 48px;
-    min-height: 48px;
+    height: 44px;
+    min-height: 44px;
 
     margin-left: 0;
     margin-right: 0;
-    margin-top: 0;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
 
     padding-left: 10px;
     padding-right: 10px;
@@ -531,7 +530,7 @@
     border-width: 1px;
     border-color: rgb(61, 65, 76);
 
-    color: rgb(231, 233, 238);
+    color: rgb(235, 237, 242);
 
     font-size: 11px;
 
@@ -539,7 +538,7 @@
 }
 
 .player-button:hover {
-    background-color: rgb(55, 59, 69);
+    background-color: rgb(56, 60, 70);
 }
 
 .player-button:active {
@@ -571,6 +570,16 @@
     color: rgb(210, 213, 220);
 
     -unity-font-style: bold;
+}
+
+.dragging-player {
+    opacity: 0.45;
+    border-color: rgb(130, 160, 190);
+}
+
+.drop-target {
+    border-width: 2px;
+    border-color: rgb(130, 170, 130);
 }
 
 
@@ -671,6 +680,97 @@
     font-size: 13px;
 
     color: rgb(151, 156, 168);
+}
+
+.final-score {
+    margin-top: 5px;
+
+    font-size: 38px;
+
+    color: rgb(255, 255, 255);
+
+    -unity-font-style: bold;
+}
+
+.final-result {
+    margin-top: 5px;
+
+    font-size: 15px;
+
+    color: rgb(170, 175, 188);
+}
+
+.result-stats {
+    flex-direction: row;
+
+    margin-top: 22px;
+
+    padding-top: 14px;
+
+    border-top-width: 1px;
+    border-top-color: rgb(51, 54, 63);
+}
+
+.result-stat {
+    align-items: center;
+
+    min-width: 130px;
+
+    margin-right: 14px;
+}
+
+.result-stat:last-child {
+    margin-right: 0;
+}
+
+.result-stat-title {
+    font-size: 9px;
+
+    color: rgb(135, 140, 153);
+
+    -unity-font-style: bold;
+}
+
+.result-stat-value {
+    margin-top: 4px;
+
+    font-size: 15px;
+
+    color: rgb(226, 229, 235);
+
+    -unity-font-style: bold;
+}
+
+.result-actions {
+    flex-direction: row;
+
+    justify-content: center;
+
+    margin-top: 22px;
+}
+
+.result-button {
+    width: 140px;
+
+    height: 38px;
+
+    margin-left: 5px;
+    margin-right: 5px;
+
+    background-color: rgb(48, 54, 67);
+
+    border-width: 1px;
+    border-color: rgb(73, 79, 94);
+
+    color: rgb(240, 242, 246);
+
+    font-size: 10px;
+
+    -unity-font-style: bold;
+}
+
+.secondary-result-button {
+    background-color: rgb(35, 38, 46);
 }
 
 /* ================================================================
