@@ -11,7 +11,9 @@ namespace FootballTactics.UI
     /// </summary>
     public sealed class PlayerDragHandler : PointerManipulator
     {
+        private readonly Action onDragStarted;
         private readonly Action<Vector2> onDrop;
+        private readonly Action onDragCancelled;
 
         private Vector2 startPosition;
         private int pointerId = -1;
@@ -21,9 +23,13 @@ namespace FootballTactics.UI
         public PlayerDragHandler(
             VisualElement root,
             VisualElement source,
-            Action<Vector2> onDrop)
+            Action<Vector2> onDrop,
+            Action onDragStarted = null,
+            Action onDragCancelled = null)
         {
             this.onDrop = onDrop;
+            this.onDragStarted = onDragStarted;
+            this.onDragCancelled = onDragCancelled;
             target = source;
 
             activators.Add(
@@ -85,6 +91,7 @@ namespace FootballTactics.UI
             {
                 dragging = true;
                 target.AddToClassList("dragging-player");
+                onDragStarted?.Invoke();
             }
 
             if (dragging)
@@ -129,6 +136,8 @@ namespace FootballTactics.UI
 
         private void CancelDrag()
         {
+            bool wasDragging = dragging;
+
             active = false;
             dragging = false;
             target.RemoveFromClassList("dragging-player");
@@ -140,6 +149,9 @@ namespace FootballTactics.UI
             }
 
             pointerId = -1;
+
+            if (wasDragging)
+                onDragCancelled?.Invoke();
         }
     }
 }
