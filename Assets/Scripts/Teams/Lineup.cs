@@ -10,8 +10,7 @@ namespace FootballTactics.Teams
 
         public Formation Formation { get; }
 
-        public IReadOnlyDictionary<string, Player> Assignments =>
-            assignments;
+        public IReadOnlyDictionary<string, Player> Assignments => assignments;
 
         public Lineup(Formation formation)
         {
@@ -22,6 +21,35 @@ namespace FootballTactics.Teams
             FormationSlot slot,
             Player player)
         {
+            if (slot == null)
+                return;
+
+            // A player can only occupy one slot. Moving a player therefore
+            // automatically clears their previous assignment.
+            if (player != null)
+            {
+                string previousSlotId = null;
+
+                foreach (var assignment in assignments)
+                {
+                    if (assignment.Key != slot.Id &&
+                        assignment.Value == player)
+                    {
+                        previousSlotId = assignment.Key;
+                        break;
+                    }
+                }
+
+                if (previousSlotId != null)
+                    assignments.Remove(previousSlotId);
+            }
+
+            if (player == null)
+            {
+                assignments.Remove(slot.Id);
+                return;
+            }
+
             assignments[slot.Id] = player;
         }
 
@@ -36,13 +64,8 @@ namespace FootballTactics.Teams
 
         public bool HasPlayer(Player player)
         {
-            foreach (Player assignedPlayer in assignments.Values)
-            {
-                if (assignedPlayer == player)
-                    return true;
-            }
-
-            return false;
+            return player != null &&
+                   assignments.Values.Contains(player);
         }
 
         public Player GetPlayer(string slotId)
@@ -54,7 +77,9 @@ namespace FootballTactics.Teams
                 : null;
         }
 
-        public bool ReplacePlayer(Player playerOff, Player playerOn)
+        public bool ReplacePlayer(
+            Player playerOff,
+            Player playerOn)
         {
             string slotId = null;
 
@@ -67,18 +92,16 @@ namespace FootballTactics.Teams
                 }
             }
 
-            if (slotId == null)
+            if (slotId == null || playerOn == null)
                 return false;
 
             assignments[slotId] = playerOn;
-
             return true;
         }
 
         public FormationArea GetFormationArea(string slotId)
         {
-            foreach (
-                FormationSlot slot
+            foreach (FormationSlot slot
                 in Formation.GetDefinition().Slots)
             {
                 if (slot.Id == slotId)
