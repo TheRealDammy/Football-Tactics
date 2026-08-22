@@ -24,6 +24,7 @@ namespace FootballTactics.UI
 
         private string selectedOff;
         private string selectedOn;
+        private bool wasVisible;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
@@ -54,10 +55,9 @@ namespace FootballTactics.UI
                 return;
 
             BuildPreview();
+            UpdatePreview();
 
             root.RegisterCallback<ClickEvent>(OnRootClick, TrickleDown.TrickleDown);
-
-            root.schedule.Execute(RefreshButtonHooks).Every(100);
             root.schedule.Execute(SyncVisibility).Every(100);
         }
 
@@ -88,20 +88,18 @@ namespace FootballTactics.UI
             title.style.fontSize = 16;
             preview.Add(title);
 
-            stateLabel = new Label("Select a player to come OFF and a player to come ON.");
+            stateLabel = new Label();
             stateLabel.style.marginTop = 6;
             stateLabel.style.marginBottom = 8;
             preview.Add(stateLabel);
 
-            offLabel = new Label("OFF  —  No player selected");
+            offLabel = new Label();
             offLabel.style.marginBottom = 4;
             preview.Add(offLabel);
 
-            onLabel = new Label("ON   —  No player selected");
+            onLabel = new Label();
             preview.Add(onLabel);
 
-            // Put the preview immediately before the action buttons so the
-            // player can see the final decision immediately before confirming.
             VisualElement buttonRow = confirmButton?.parent;
             if (buttonRow != null && buttonRow.parent != null)
                 buttonRow.parent.Insert(buttonRow.parent.IndexOf(buttonRow), preview);
@@ -130,23 +128,24 @@ namespace FootballTactics.UI
             }
         }
 
-        private void RefreshButtonHooks()
-        {
-            // Player buttons are dynamically recreated by MatchScreenController.
-            // The root click listener therefore intentionally handles them via
-            // event delegation instead of storing references to stale buttons.
-            UpdatePreview();
-        }
-
         private void SyncVisibility()
         {
             if (substitutionOverlay == null || preview == null)
                 return;
 
-            preview.style.display =
-                substitutionOverlay.resolvedStyle.display == DisplayStyle.None
-                    ? DisplayStyle.None
-                    : DisplayStyle.Flex;
+            bool visible = substitutionOverlay.resolvedStyle.display != DisplayStyle.None;
+
+            if (visible && !wasVisible)
+            {
+                selectedOff = null;
+                selectedOn = null;
+                UpdatePreview();
+            }
+
+            wasVisible = visible;
+            preview.style.display = visible
+                ? DisplayStyle.Flex
+                : DisplayStyle.None;
         }
 
         private void UpdatePreview()
@@ -167,7 +166,7 @@ namespace FootballTactics.UI
                 !string.IsNullOrEmpty(selectedOn);
 
             stateLabel.text = complete
-                ? "READY TO CONFIRM — review the player coming OFF and ON."
+                ? "READY TO CONFIRM — review the players below."
                 : string.IsNullOrEmpty(selectedOff)
                     ? "Select a player to come OFF."
                     : "Now select the replacement coming ON.";
