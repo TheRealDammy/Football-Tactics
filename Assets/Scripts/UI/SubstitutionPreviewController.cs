@@ -1,13 +1,11 @@
+using System;
+using FootballTactics.Simulation;
+using FootballTactics.Teams;
 using UnityEngine;
 using UnityEngine.UIElements;
 
 namespace FootballTactics.UI
 {
-    /// <summary>
-    /// Adds a persistent, visual substitution preview to the existing match UI.
-    /// This intentionally sits beside MatchScreenController so the preview can
-    /// be improved without duplicating or replacing the match simulation logic.
-    /// </summary>
     public sealed class SubstitutionPreviewController : MonoBehaviour
     {
         private UIDocument document;
@@ -16,12 +14,11 @@ namespace FootballTactics.UI
         private ScrollView playerOffList;
         private ScrollView playerOnList;
         private Button confirmButton;
-
-        private VisualElement preview;
         private Label stateLabel;
-        private Label offLabel;
-        private Label onLabel;
-
+        private Label offName;
+        private Label offRole;
+        private Label onName;
+        private Label onRole;
         private string selectedOff;
         private string selectedOn;
         private bool wasVisible;
@@ -29,9 +26,9 @@ namespace FootballTactics.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
         {
-            foreach (UIDocument uiDocument in FindObjectsByType<UIDocument>(FindObjectsSortMode.None))
+            foreach (UIDocument uiDocument in FindObjectsByType<UIDocument>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (uiDocument.rootVisualElement.Q<VisualElement>("substitutionOverlay") == null)
+                if (uiDocument.rootVisualElement?.Q<VisualElement>("substitutionOverlay") == null)
                     continue;
 
                 if (uiDocument.GetComponent<SubstitutionPreviewController>() == null)
@@ -43,68 +40,21 @@ namespace FootballTactics.UI
         {
             document = GetComponent<UIDocument>();
             root = document.rootVisualElement;
-
             substitutionOverlay = root.Q<VisualElement>("substitutionOverlay");
             playerOffList = root.Q<ScrollView>("playerOffList");
             playerOnList = root.Q<ScrollView>("playerOnList");
             confirmButton = root.Q<Button>("confirmSubstitutionButton");
+            stateLabel = root.Q<Label>("selectedSubstitutionLabel");
+            offName = root.Q<Label>("previewOffName");
+            offRole = root.Q<Label>("previewOffRole");
+            onName = root.Q<Label>("previewOnName");
+            onRole = root.Q<Label>("previewOnRole");
 
-            if (substitutionOverlay == null ||
-                playerOffList == null ||
-                playerOnList == null)
+            if (substitutionOverlay == null || playerOffList == null || playerOnList == null)
                 return;
 
-            BuildPreview();
-            UpdatePreview();
-
             root.RegisterCallback<ClickEvent>(OnRootClick, TrickleDown.TrickleDown);
-            root.schedule.Execute(SyncVisibility).Every(100);
-        }
-
-        private void BuildPreview()
-        {
-            preview = new VisualElement();
-            preview.name = "substitutionPreview";
-            preview.AddToClassList("substitution-preview");
-
-            preview.style.marginTop = 12;
-            preview.style.marginBottom = 12;
-            preview.style.paddingTop = 12;
-            preview.style.paddingBottom = 12;
-            preview.style.paddingLeft = 16;
-            preview.style.paddingRight = 16;
-            preview.style.borderTopWidth = 1;
-            preview.style.borderBottomWidth = 1;
-            preview.style.borderLeftWidth = 1;
-            preview.style.borderRightWidth = 1;
-            preview.style.borderTopLeftRadius = 8;
-            preview.style.borderTopRightRadius = 8;
-            preview.style.borderBottomLeftRadius = 8;
-            preview.style.borderBottomRightRadius = 8;
-
-            Label title = new Label("SUBSTITUTION PREVIEW");
-            title.AddToClassList("substitution-preview-title");
-            title.style.unityFontStyleAndWeight = FontStyle.Bold;
-            title.style.fontSize = 16;
-            preview.Add(title);
-
-            stateLabel = new Label();
-            stateLabel.style.marginTop = 6;
-            stateLabel.style.marginBottom = 8;
-            preview.Add(stateLabel);
-
-            offLabel = new Label();
-            offLabel.style.marginBottom = 4;
-            preview.Add(offLabel);
-
-            onLabel = new Label();
-            preview.Add(onLabel);
-
-            VisualElement buttonRow = confirmButton?.parent;
-            if (buttonRow != null && buttonRow.parent != null)
-                buttonRow.parent.Insert(buttonRow.parent.IndexOf(buttonRow), preview);
-            else
-                substitutionOverlay.Add(preview);
+            root.schedule.Execute(Refresh).Every(100);
         }
 
         private void OnRootClick(ClickEvent evt)
@@ -118,92 +68,131 @@ namespace FootballTactics.UI
 
             if (IsInside(button, playerOffList))
             {
-                selectedOff = button.text;
+                selectedOff = ExtractPlayerName(button.text);
+                selectedOn = null;
                 UpdatePreview();
             }
             else if (IsInside(button, playerOnList))
             {
-                selectedOn = button.text;
+                selectedOn = ExtractPlayerName(button.text);
                 UpdatePreview();
             }
         }
 
-        private void SyncVisibility()
+        private void Refresh()
         {
-            if (substitutionOverlay == null || preview == null)
+            if (substitutionOverlay == null)
                 return;
 
             bool visible = substitutionOverlay.resolvedStyle.display != DisplayStyle.None;
-
             if (visible && !wasVisible)
             {
                 selectedOff = null;
                 selectedOn = null;
-                UpdatePreview();
             }
 
             wasVisible = visible;
-            preview.style.display = visible
-                ? DisplayStyle.Flex
-                : DisplayStyle.None;
+            UpdatePreview();
         }
 
         private void UpdatePreview()
         {
-            if (preview == null)
-                return;
+            Player off = FindHomePlayer(selectedOff);
+            Player on = FindHomePlayer(selectedOn);
 
-            offLabel.text = string.IsNullOrEmpty(selectedOff)
-                ? "OFF  —  No player selected"
-                : "OFF  →  " + selectedOff;
+            if (offName != null)
+                offName.text = off != null ? off.Name : "No player selected";
+            if (onName != null)
+                onName.text = on != null ? on.Name : "No player selected";
+            if (offRole != null)
+                offRole.text = off != null ? FormatPlayerInfo(off) : "";
+            if (onRole != null)
+                onRole.text = on != null ? FormatPlayerInfo(on) : "";
 
-            onLabel.text = string.IsNullOrEmpty(selectedOn)
-                ? "ON   —  No player selected"
-                : "ON   →  " + selectedOn;
-
-            bool complete =
-                !string.IsNullOrEmpty(selectedOff) &&
-                !string.IsNullOrEmpty(selectedOn);
-
-            stateLabel.text = complete
-                ? "READY TO CONFIRM — review the players below."
-                : string.IsNullOrEmpty(selectedOff)
-                    ? "Select a player to come OFF."
-                    : "Now select the replacement coming ON.";
+            bool complete = off != null && on != null;
+            if (stateLabel != null)
+            {
+                stateLabel.text = complete
+                    ? "READY TO CONFIRM — review the player coming OFF and ON."
+                    : off != null
+                        ? "Now select the replacement coming ON."
+                        : "Select a player to come OFF and a player to come ON.";
+            }
 
             if (confirmButton != null)
                 confirmButton.SetEnabled(complete);
         }
 
+        private static Player FindHomePlayer(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+                return null;
+
+            MatchSimulator simulator = FindFirstObjectByType<MatchSimulator>();
+            if (simulator?.Engine?.HomeTeam == null)
+                return null;
+
+            foreach (Player player in simulator.Engine.HomeTeam.Players)
+                if (player.Name == name)
+                    return player;
+
+            return null;
+        }
+
+        private static string FormatPlayerInfo(Player player)
+        {
+            return $"{FormatRole(player.Role)}  •  {player.Fitness}% fitness";
+        }
+
+        private static string FormatRole(PlayerRole role)
+        {
+            return role switch
+            {
+                PlayerRole.Goalkeeper => "Goalkeeper",
+                PlayerRole.Sweeper => "Sweeper",
+                PlayerRole.LineHolding => "Line Holding",
+                PlayerRole.CentreBack => "Centre Back",
+                PlayerRole.FullBack => "Full Back",
+                PlayerRole.CentralMidfielder => "Central Midfielder",
+                PlayerRole.Playmaker => "Playmaker",
+                PlayerRole.DefensiveMidfielder => "Defensive Midfielder",
+                PlayerRole.BoxToBox => "Box-to-Box",
+                PlayerRole.Striker => "Striker",
+                PlayerRole.Winger => "Winger",
+                _ => role.ToString()
+            };
+        }
+
+        private static string ExtractPlayerName(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+                return string.Empty;
+
+            int separator = text.IndexOf("  •", StringComparison.Ordinal);
+            return separator >= 0 ? text.Substring(0, separator).Trim() : text.Trim();
+        }
+
         private static Button FindButton(VisualElement element)
         {
             VisualElement current = element;
-
             while (current != null)
             {
                 if (current is Button button)
                     return button;
-
                 current = current.parent;
             }
-
             return null;
         }
 
         private static bool IsInside(VisualElement element, VisualElement container)
         {
-            if (element == null || container == null)
-                return false;
-
             VisualElement current = element;
             while (current != null)
             {
                 if (current == container)
                     return true;
-
                 current = current.parent;
             }
-
             return false;
         }
     }
