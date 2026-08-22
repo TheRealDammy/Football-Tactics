@@ -558,18 +558,19 @@
 
 .selected-substitution {
     flex-shrink: 0;
+    min-height: 64px;
+    height: auto;
 
-    height: 32px;
-    min-height: 32px;
-
-    margin-top: 12px;
+    margin-top: 10px;
     margin-bottom: 10px;
 
-    font-size: 12px;
+    padding: 8px 10px;
 
-    color: rgb(210, 213, 220);
+    white-space: normal;
 
-    -unity-font-style: bold;
+    background-color: rgb(29, 31, 38);
+    border-width: 1px;
+    border-color: rgb(52, 55, 65);
 }
 
 .dragging-player {
@@ -589,33 +590,20 @@
 
 .dialog-buttons {
     flex-shrink: 0;
+    height: 40px;
+    min-height: 40px;
 
     flex-direction: row;
-
     justify-content: flex-end;
+    align-items: center;
 }
 
 .dialog-button {
-    width: 120px;
-
+    flex-shrink: 0;
+    width: 140px;
+    min-width: 140px;
     height: 36px;
     min-height: 36px;
-
-    margin-left: 7px;
-    margin-right: 0;
-    margin-top: 0;
-    margin-bottom: 0;
-
-    background-color: rgb(45, 48, 58);
-
-    border-width: 1px;
-    border-color: rgb(70, 74, 87);
-
-    color: rgb(235, 237, 242);
-
-    font-size: 11px;
-
-    -unity-font-style: bold;
 }
 
 .secondary-button {
