@@ -2,140 +2,54 @@
     <Style src="project://database/Assets/UI/MatchScreen.uss?fileID=7433441132597879392&amp;guid=53f47a8ae1d292a4a8531b4343276808&amp;type=3#MatchScreen"/>
     <ui:VisualElement name="root" class="root">
         <ui:VisualElement name="header" class="header">
-            <ui:VisualElement name="homeTeamBlock" class="team-block home-team">
-                <ui:Label name="homeTeamLabel" text="Home Team" class="team-name"/>
-            </ui:VisualElement>
-            <ui:VisualElement name="scoreBlock" class="score-block">
-                <ui:Label name="scoreLabel" text="0 - 0" class="score"/>
-                <ui:Label name="clockLabel" text="0:00" class="clock"/>
-            </ui:VisualElement>
-            <ui:VisualElement name="awayTeamBlock" class="team-block away-team">
-                <ui:Label name="awayTeamLabel" text="Away Team" class="team-name"/>
-            </ui:VisualElement>
+            <ui:VisualElement name="homeTeamBlock" class="team-block home-team"><ui:Label name="homeTeamLabel" text="Home Team" class="team-name"/></ui:VisualElement>
+            <ui:VisualElement name="scoreBlock" class="score-block"><ui:Label name="scoreLabel" text="0 - 0" class="score"/><ui:Label name="clockLabel" text="0:00" class="clock"/></ui:VisualElement>
+            <ui:VisualElement name="awayTeamBlock" class="team-block away-team"><ui:Label name="awayTeamLabel" text="Away Team" class="team-name"/></ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="stats" class="stats">
-            <ui:VisualElement name="possessionCard" class="stat-card">
-                <ui:Label text="POSSESSION" class="stat-title"/>
-                <ui:Label name="possessionLabel" text="50% - 50%" class="stat-value"/>
-            </ui:VisualElement>
-            <ui:VisualElement name="shotsCard" class="stat-card">
-                <ui:Label text="SHOTS" class="stat-title"/>
-                <ui:Label name="shotsLabel" text="0 - 0" class="stat-value"/>
-            </ui:VisualElement>
-            <ui:VisualElement name="xgCard" class="stat-card last-card">
-                <ui:Label text="EXPECTED GOALS" class="stat-title"/>
-                <ui:Label name="xgLabel" text="0.00 - 0.00" class="stat-value"/>
-            </ui:VisualElement>
+            <ui:VisualElement name="possessionCard" class="stat-card"><ui:Label text="POSSESSION" class="stat-title"/><ui:Label name="possessionLabel" text="50% - 50%" class="stat-value"/></ui:VisualElement>
+            <ui:VisualElement name="shotsCard" class="stat-card"><ui:Label text="SHOTS" class="stat-title"/><ui:Label name="shotsLabel" text="0 - 0" class="stat-value"/></ui:VisualElement>
+            <ui:VisualElement name="xgCard" class="stat-card last-card"><ui:Label text="EXPECTED GOALS" class="stat-title"/><ui:Label name="xgLabel" text="0.00 - 0.00" class="stat-value"/></ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="content" class="content">
-            <ui:VisualElement name="eventsPanel" class="events-panel">
-                <ui:Label name="eventsTitle" text="MATCH EVENTS" class="section-title"/>
-                <ui:ScrollView name="eventList" vertical-scroller-visibility="auto" horizontal-scroller-visibility="hidden" class="event-list"/>
-            </ui:VisualElement>
+            <ui:VisualElement name="eventsPanel" class="events-panel"><ui:Label name="eventsTitle" text="MATCH EVENTS" class="section-title"/><ui:ScrollView name="eventList" vertical-scroller-visibility="auto" horizontal-scroller-visibility="hidden" class="event-list"/></ui:VisualElement>
             <ui:VisualElement name="rightColumn" class="right-column">
                 <ui:VisualElement name="tacticsPanel" class="tactics-panel">
                     <ui:Label text="TACTICS" class="section-title"/>
                     <ui:VisualElement name="currentTactics" class="current-tactics">
-                        <ui:VisualElement class="current-row">
-                            <ui:Label text="FORMATION" class="current-label"/>
-                            <ui:Label name="formationLabel" text="Formation: 4-3-3" class="current-value"/>
-                        </ui:VisualElement>
-                        <ui:VisualElement class="current-row">
-                            <ui:Label text="MENTALITY" class="current-label"/>
-                            <ui:Label name="mentalityLabel" text="Mentality: Balanced" class="current-value"/>
-                        </ui:VisualElement>
-                        <ui:VisualElement class="current-row">
-                            <ui:Label text="PRESSING" class="current-label"/>
-                            <ui:Label name="pressingLabel" text="Pressing: Medium" class="current-value"/>
-                        </ui:VisualElement>
-                        <ui:VisualElement class="current-row last-row">
-                            <ui:Label text="DEFENSIVE LINE" class="current-label"/>
-                            <ui:Label name="defensiveLineLabel" text="Defensive Line: Normal" class="current-value"/>
-                        </ui:VisualElement>
+                        <ui:VisualElement class="current-row"><ui:Label text="FORMATION" class="current-label"/><ui:Label name="formationLabel" text="Formation: 4-3-3" class="current-value"/></ui:VisualElement>
+                        <ui:VisualElement class="current-row"><ui:Label text="MENTALITY" class="current-label"/><ui:Label name="mentalityLabel" text="Mentality: Balanced" class="current-value"/></ui:VisualElement>
+                        <ui:VisualElement class="current-row"><ui:Label text="PRESSING" class="current-label"/><ui:Label name="pressingLabel" text="Pressing: Medium" class="current-value"/></ui:VisualElement>
+                        <ui:VisualElement class="current-row last-row"><ui:Label text="DEFENSIVE LINE" class="current-label"/><ui:Label name="defensiveLineLabel" text="Defensive Line: Normal" class="current-value"/></ui:VisualElement>
                     </ui:VisualElement>
-                    <ui:Label text="FORMATION" class="sub-title" />
-                    <ui:VisualElement class="button-row">
-                        <ui:Button name="fourFourTwoButton" text="4-4-2" class="tactical-button" />
-                        <ui:Button name="fourThreeThreeButton" text="4-3-3" class="tactical-button" />
-                        <ui:Button name="fourTwoThreeOneButton" text="4-2-3-1" class="tactical-button last-button" />
-                    </ui:VisualElement>
-                    <ui:Label text="MENTALITY" class="sub-title"/>
-                    <ui:VisualElement class="button-row">
-                        <ui:Button name="defensiveButton" text="DEFENSIVE" class="tactical-button"/>
-                        <ui:Button name="balancedButton" text="BALANCED" class="tactical-button"/>
-                        <ui:Button name="attackingButton" text="ATTACKING" class="tactical-button last-button"/>
-                    </ui:VisualElement>
-                    <ui:Label text="PRESSING" class="sub-title"/>
-                    <ui:VisualElement class="button-row">
-                        <ui:Button name="lowPressButton" text="LOW" class="tactical-button"/>
-                        <ui:Button name="mediumPressButton" text="MED" class="tactical-button"/>
-                        <ui:Button name="highPressButton" text="HIGH" class="tactical-button last-button"/>
-                    </ui:VisualElement>
-                    <ui:Label text="DEFENSIVE LINE" class="sub-title"/>
-                    <ui:VisualElement class="button-row">
-                        <ui:Button name="deepLineButton" text="DEEP" class="tactical-button"/>
-                        <ui:Button name="normalLineButton" text="NORMAL" class="tactical-button"/>
-                        <ui:Button name="highLineButton" text="HIGH" class="tactical-button last-button"/>
-                    </ui:VisualElement>
+                    <ui:Label text="FORMATION" class="sub-title"/><ui:VisualElement class="button-row"><ui:Button name="fourFourTwoButton" text="4-4-2" class="tactical-button"/><ui:Button name="fourThreeThreeButton" text="4-3-3" class="tactical-button"/><ui:Button name="fourTwoThreeOneButton" text="4-2-3-1" class="tactical-button last-button"/></ui:VisualElement>
+                    <ui:Label text="MENTALITY" class="sub-title"/><ui:VisualElement class="button-row"><ui:Button name="defensiveButton" text="DEFENSIVE" class="tactical-button"/><ui:Button name="balancedButton" text="BALANCED" class="tactical-button"/><ui:Button name="attackingButton" text="ATTACKING" class="tactical-button last-button"/></ui:VisualElement>
+                    <ui:Label text="PRESSING" class="sub-title"/><ui:VisualElement class="button-row"><ui:Button name="lowPressButton" text="LOW" class="tactical-button"/><ui:Button name="mediumPressButton" text="MED" class="tactical-button"/><ui:Button name="highPressButton" text="HIGH" class="tactical-button last-button"/></ui:VisualElement>
+                    <ui:Label text="DEFENSIVE LINE" class="sub-title"/><ui:VisualElement class="button-row"><ui:Button name="deepLineButton" text="DEEP" class="tactical-button"/><ui:Button name="normalLineButton" text="NORMAL" class="tactical-button"/><ui:Button name="highLineButton" text="HIGH" class="tactical-button last-button"/></ui:VisualElement>
                     <ui:Button name="substitutionButton" text="SUBSTITUTIONS" class="substitution-button"/>
                 </ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
         <ui:VisualElement name="substitutionOverlay" class="overlay">
             <ui:VisualElement name="substitutionDialog" class="dialog">
-                <ui:VisualElement class="dialog-header">
-                    <ui:Label text="SUBSTITUTION" class="dialog-title"/>
-                    <ui:Label name="substitutionAvailabilityLabel" text="Substitutions remaining: 3" class="dialog-subtitle"/>
-                </ui:VisualElement>
+                <ui:VisualElement class="dialog-header"><ui:Label text="SUBSTITUTION" class="dialog-title"/><ui:Label name="substitutionAvailabilityLabel" text="Substitutions remaining: 3" class="dialog-subtitle"/></ui:VisualElement>
                 <ui:VisualElement name="substitutionColumns" class="substitution-columns">
-                    <ui:VisualElement name="playerOffColumn" class="player-column">
-                        <ui:Label text="PLAYER OFF" class="column-title"/>
-                        <ui:ScrollView name="playerOffList" vertical-scroller-visibility="auto" horizontal-scroller-visibility="hidden" class="player-list"/>
-                    </ui:VisualElement>
-                    <ui:VisualElement name="playerOnColumn" class="player-column">
-                        <ui:Label text="PLAYER ON" class="column-title"/>
-                        <ui:ScrollView name="playerOnList" vertical-scroller-visibility="auto" horizontal-scroller-visibility="hidden" class="player-list"/>
-                    </ui:VisualElement>
+                    <ui:VisualElement name="playerOffColumn" class="player-column"><ui:Label text="PLAYER OFF" class="column-title"/><ui:ScrollView name="playerOffList" vertical-scroller-visibility="auto" horizontal-scroller-visibility="hidden" class="player-list"/></ui:VisualElement>
+                    <ui:VisualElement name="playerOnColumn" class="player-column"><ui:Label text="PLAYER ON" class="column-title"/><ui:ScrollView name="playerOnList" vertical-scroller-visibility="auto" horizontal-scroller-visibility="hidden" class="player-list"/></ui:VisualElement>
                 </ui:VisualElement>
-                <ui:Label name="selectedSubstitutionLabel" text="Select a player to come off and a player to come on." class="selected-substitution"/>
-                <ui:VisualElement name="dialogButtons" class="dialog-buttons">
-                    <ui:Button name="cancelSubstitutionButton" text="CANCEL" class="dialog-button secondary-button"/>
-                    <ui:Button name="confirmSubstitutionButton" text="CONFIRM" class="dialog-button confirm-button"/>
+                <ui:VisualElement name="substitutionPreview" class="substitution-preview">
+                    <ui:Label text="SUBSTITUTION PREVIEW" class="substitution-preview-title"/>
+                    <ui:VisualElement class="substitution-preview-columns">
+                        <ui:VisualElement class="preview-player preview-off"><ui:Label text="OFF" class="preview-direction"/><ui:Label name="previewOffName" text="No player selected" class="preview-player-name"/><ui:Label name="previewOffRole" text="" class="preview-player-role"/></ui:VisualElement>
+                        <ui:Label text="→" class="preview-arrow"/>
+                        <ui:VisualElement class="preview-player preview-on"><ui:Label text="ON" class="preview-direction"/><ui:Label name="previewOnName" text="No player selected" class="preview-player-name"/><ui:Label name="previewOnRole" text="" class="preview-player-role"/></ui:VisualElement>
+                    </ui:VisualElement>
+                    <ui:Label name="selectedSubstitutionLabel" text="Select a player to come off and a player to come on." class="selected-substitution"/>
                 </ui:VisualElement>
+                <ui:VisualElement name="dialogButtons" class="dialog-buttons"><ui:Button name="cancelSubstitutionButton" text="CANCEL" class="dialog-button secondary-button"/><ui:Button name="confirmSubstitutionButton" text="CONFIRM SUBSTITUTION" class="dialog-button confirm-button"/></ui:VisualElement>
             </ui:VisualElement>
         </ui:VisualElement>
-        <ui:VisualElement name="tacticalDecisionOverlay" class="tactical-decision-overlay">
-
-            <ui:VisualElement name="tacticalDecisionPanel" class="tactical-decision-panel">
-                <ui:Label name="tacticalDecisionTitle" class="decision-title" text="TACTICAL SITUATION" />
-                <ui:Label name="tacticalDecisionDescription" class="decision-description" text="" />
-                <ui:VisualElement name="tacticalDecisionOptions" class="decision-options" />
-            </ui:VisualElement>
-        </ui:VisualElement>
-        <ui:VisualElement name="fullTimeOverlay" class="full-time-overlay">
-            <ui:VisualElement name="fullTimeDialog" class="full-time-dialog">
-                <ui:Label text="FULL TIME" class="full-time" />
-                <ui:Label name="finalScoreLabel" text="0 - 0" class="final-score" />
-                <ui:Label name="finalResultLabel" text="" class="final-result" />
-                <ui:VisualElement class="result-stats">
-                    <ui:VisualElement class="result-stat">
-                        <ui:Label text="POSSESSION" class="result-stat-title" />
-                        <ui:Label name="finalPossessionLabel" text="50% - 50%" class="result-stat-value" />
-                    </ui:VisualElement>
-                    <ui:VisualElement class="result-stat">
-                        <ui:Label text="SHOTS" class="result-stat-title" />
-                        <ui:Label name="finalShotsLabel" text="0 - 0" class="result-stat-value" />
-                    </ui:VisualElement>
-                    <ui:VisualElement class="result-stat">
-                        <ui:Label text="xG" class="result-stat-title" />
-                        <ui:Label name="finalXgLabel" text="0.00 - 0.00" class="result-stat-value" />
-                    </ui:VisualElement>
-                </ui:VisualElement>
-                <ui:VisualElement class="result-actions">
-                    <ui:Button name="playAgainButton" text="PLAY AGAIN" class="result-button" />
-                    <ui:Button name="returnToTeamButton" text="TEAM SELECTION" class="result-button secondary-result-button" />
-                </ui:VisualElement>
-            </ui:VisualElement>
-        </ui:VisualElement>
+        <ui:VisualElement name="tacticalDecisionOverlay" class="tactical-decision-overlay"><ui:VisualElement name="tacticalDecisionPanel" class="tactical-decision-panel"><ui:Label name="tacticalDecisionTitle" class="decision-title" text="TACTICAL SITUATION"/><ui:Label name="tacticalDecisionDescription" class="decision-description" text=""/><ui:VisualElement name="tacticalDecisionOptions" class="decision-options"/></ui:VisualElement></ui:VisualElement>
+        <ui:VisualElement name="fullTimeOverlay" class="full-time-overlay"><ui:VisualElement name="fullTimeDialog" class="full-time-dialog"><ui:Label text="FULL TIME" class="full-time"/><ui:Label name="finalScoreLabel" text="0 - 0" class="final-score"/><ui:Label name="finalResultLabel" text="" class="final-result"/><ui:VisualElement class="result-stats"><ui:VisualElement class="result-stat"><ui:Label text="POSSESSION" class="result-stat-title"/><ui:Label name="finalPossessionLabel" text="50% - 50%" class="result-stat-value"/></ui:VisualElement><ui:VisualElement class="result-stat"><ui:Label text="SHOTS" class="result-stat-title"/><ui:Label name="finalShotsLabel" text="0 - 0" class="result-stat-value"/></ui:VisualElement><ui:VisualElement class="result-stat"><ui:Label text="xG" class="result-stat-title"/><ui:Label name="finalXgLabel" text="0.00 - 0.00" class="result-stat-value"/></ui:VisualElement></ui:VisualElement><ui:VisualElement class="result-actions"><ui:Button name="playAgainButton" text="PLAY AGAIN" class="result-button"/><ui:Button name="returnToTeamButton" text="TEAM SELECTION" class="result-button secondary-result-button"/></ui:VisualElement></ui:VisualElement></ui:VisualElement>
     </ui:VisualElement>
 </ui:UXML>
