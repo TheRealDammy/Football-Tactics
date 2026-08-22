@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using FootballTactics.Simulation;
 using FootballTactics.Teams;
 using UnityEngine;
@@ -19,6 +20,8 @@ namespace FootballTactics.UI
         private Label offRole;
         private Label onName;
         private Label onRole;
+
+        private readonly HashSet<Button> hookedButtons = new();
         private string selectedOff;
         private string selectedOn;
         private bool wasVisible;
@@ -39,6 +42,9 @@ namespace FootballTactics.UI
         private void Awake()
         {
             document = GetComponent<UIDocument>();
+            if (document == null)
+                return;
+
             root = document.rootVisualElement;
             substitutionOverlay = root.Q<VisualElement>("substitutionOverlay");
             playerOffList = root.Q<ScrollView>("playerOffList");
@@ -51,32 +57,13 @@ namespace FootballTactics.UI
             onRole = root.Q<Label>("previewOnRole");
 
             if (substitutionOverlay == null || playerOffList == null || playerOnList == null)
+            {
+                Debug.LogWarning("SubstitutionPreviewController: substitution elements not found.");
                 return;
+            }
 
-            root.RegisterCallback<ClickEvent>(OnRootClick, TrickleDown.TrickleDown);
             root.schedule.Execute(Refresh).Every(100);
-        }
-
-        private void OnRootClick(ClickEvent evt)
-        {
-            if (evt.target is not VisualElement clicked)
-                return;
-
-            Button button = FindButton(clicked);
-            if (button == null)
-                return;
-
-            if (IsInside(button, playerOffList))
-            {
-                selectedOff = ExtractPlayerName(button.text);
-                selectedOn = null;
-                UpdatePreview();
-            }
-            else if (IsInside(button, playerOnList))
-            {
-                selectedOn = ExtractPlayerName(button.text);
-                UpdatePreview();
-            }
+            ResetPreview();
         }
 
         private void Refresh()
@@ -85,13 +72,50 @@ namespace FootballTactics.UI
                 return;
 
             bool visible = substitutionOverlay.resolvedStyle.display != DisplayStyle.None;
+
             if (visible && !wasVisible)
-            {
-                selectedOff = null;
-                selectedOn = null;
-            }
+                ResetPreview();
 
             wasVisible = visible;
+
+            HookPlayerButtons(playerOffList, true);
+            HookPlayerButtons(playerOnList, false);
+
+            UpdatePreview();
+        }
+
+        private void HookPlayerButtons(ScrollView list, bool isOffList)
+        {
+            if (list == null)
+                return;
+
+            list.Query<Button>().ForEach(button =>
+            {
+                if (hookedButtons.Contains(button))
+                    return;
+
+                hookedButtons.Add(button);
+                button.clicked += () =>
+                {
+                    if (isOffList)
+                    {
+                        selectedOff = ExtractPlayerName(button.text);
+                        selectedOn = null;
+                    }
+                    else
+                    {
+                        selectedOn = ExtractPlayerName(button.text);
+                    }
+
+                    UpdatePreview();
+                };
+            });
+        }
+
+        private void ResetPreview()
+        {
+            selectedOff = null;
+            selectedOn = null;
             UpdatePreview();
         }
 
@@ -102,14 +126,18 @@ namespace FootballTactics.UI
 
             if (offName != null)
                 offName.text = off != null ? off.Name : "No player selected";
+
             if (onName != null)
                 onName.text = on != null ? on.Name : "No player selected";
+
             if (offRole != null)
                 offRole.text = off != null ? FormatPlayerInfo(off) : "";
+
             if (onRole != null)
                 onRole.text = on != null ? FormatPlayerInfo(on) : "";
 
             bool complete = off != null && on != null;
+
             if (stateLabel != null)
             {
                 stateLabel.text = complete
@@ -133,8 +161,10 @@ namespace FootballTactics.UI
                 return null;
 
             foreach (Player player in simulator.Engine.HomeTeam.Players)
-                if (player.Name == name)
+            {
+                if (string.Equals(player.Name, name, StringComparison.Ordinal))
                     return player;
+            }
 
             return null;
         }
@@ -168,32 +198,8 @@ namespace FootballTactics.UI
             if (string.IsNullOrWhiteSpace(text))
                 return string.Empty;
 
-            int separator = text.IndexOf("  •", StringComparison.Ordinal);
-            return separator >= 0 ? text.Substring(0, separator).Trim() : text.Trim();
-        }
-
-        private static Button FindButton(VisualElement element)
-        {
-            VisualElement current = element;
-            while (current != null)
-            {
-                if (current is Button button)
-                    return button;
-                current = current.parent;
-            }
-            return null;
-        }
-
-        private static bool IsInside(VisualElement element, VisualElement container)
-        {
-            VisualElement current = element;
-            while (current != null)
-            {
-                if (current == container)
-                    return true;
-                current = current.parent;
-            }
-            return false;
+            string[] parts = text.Split('•');
+            return parts.Length > 0 ? parts[0].Trim() : text.Trim();
         }
     }
 }
