@@ -5,10 +5,27 @@ namespace FootballTactics.Simulation
 {
     public static class TacticalSituationGenerator
     {
+        // Prevents the same match from generating another player decision immediately
+        // after the previous one has been resolved. Without this cooldown the engine's
+        // nextSituationMinute could remain in the past, causing decisions at 67, 68, 69...
+        private static readonly Dictionary<MatchEngine, int> nextAllowedDecisionMinute =
+            new Dictionary<MatchEngine, int>();
+
         public static TacticalSituation Generate(MatchEngine engine)
         {
+            if (engine == null)
+                return null;
+
             if (!DecisionOpportunityManager.IsDecisionWindow(engine))
                 return null;
+
+            int minute = engine.State.Minute;
+
+            if (nextAllowedDecisionMinute.TryGetValue(engine, out int nextAllowed) &&
+                minute < nextAllowed)
+            {
+                return null;
+            }
 
             List<TacticalSituation> candidates = new();
 
@@ -23,16 +40,25 @@ namespace FootballTactics.Simulation
             if (candidates.Count == 0)
                 return null;
 
-            // Situation urgency now influences which opportunity is selected.
-            // We still retain randomness so matches do not become scripted.
             float weight = DecisionOpportunityManager.GetDecisionWeight(engine);
+
+            TacticalSituation selected;
+
             if (weight > 1.15f && candidates.Count > 1)
             {
-                int index = Random.Range(0, candidates.Count);
-                return candidates[index];
+                selected = candidates[Random.Range(0, candidates.Count)];
+            }
+            else
+            {
+                selected = candidates[Random.Range(0, candidates.Count)];
             }
 
-            return candidates[Random.Range(0, candidates.Count)];
+            // A decision should create breathing room before another decision.
+            // 4–7 minutes means decisions can still happen several times in a match,
+            // but never repeatedly in consecutive minutes.
+            nextAllowedDecisionMinute[engine] = minute + Random.Range(4, 8);
+
+            return selected;
         }
 
         private static void AddIfValid(List<TacticalSituation> candidates, TacticalSituation situation)
