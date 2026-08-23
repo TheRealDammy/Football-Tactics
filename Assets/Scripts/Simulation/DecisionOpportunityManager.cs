@@ -1,85 +1,75 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace FootballTactics.Simulation
 {
-    /// <summary>
-    /// Controls when player-facing tactical decisions are appropriate.
-    /// The match engine remains responsible for generating the actual situation;
-    /// this class prevents decisions from becoming evenly/randomly distributed
-    /// and gives the match a natural rhythm.
-    /// </summary>
-    public static class DecisionOpportunityManager
+    public class DecisionOpportunityManager
     {
-        public static bool IsDecisionWindow(MatchEngine engine)
+        private readonly Queue<int> plannedMinutes = new();
+
+        private int cooldownUntil;
+
+        public DecisionOpportunityManager()
         {
-            if (engine == null || engine.State == null)
-                return false;
-
-            int minute = engine.State.Minute;
-
-            if (minute < 8 || minute >= 90)
-                return false;
-
-            // Early assessment: occasional decisions, not constant interruptions.
-            if (minute >= 8 && minute <= 14)
-                return true;
-
-            // First tactical phase.
-            if (minute >= 18 && minute <= 27)
-                return true;
-
-            // End of first half.
-            if (minute >= 32 && minute <= 43)
-                return true;
-
-            // Opening of second half.
-            if (minute >= 48 && minute <= 58)
-                return true;
-
-            // Main substitution/tactical window.
-            if (minute >= 62 && minute <= 73)
-                return true;
-
-            // Late-game management.
-            if (minute >= 76 && minute <= 85)
-                return true;
-
-            // Final push/protection phase.
-            if (minute >= 86 && minute <= 89)
-                return true;
-
-            return false;
+            GeneratePlan();
         }
 
-        public static float GetDecisionWeight(MatchEngine engine)
+        private void GeneratePlan()
         {
-            if (engine == null || engine.State == null)
-                return 0f;
+            plannedMinutes.Clear();
+
+            // Every match gets 2–5 decisions.
+            int count = Random.Range(2, 6);
+
+            List<int> pool = new()
+            {
+                Random.Range(10,20),
+                Random.Range(22,32),
+                Random.Range(36,45),
+                Random.Range(50,60),
+                Random.Range(62,74),
+                Random.Range(76,89)
+            };
+
+            Shuffle(pool);
+
+            pool.Sort();
+
+            for (int i = 0; i < count; i++)
+                plannedMinutes.Enqueue(pool[i]);
+        }
+
+        public bool ShouldOfferDecision(MatchEngine engine)
+        {
+            if (engine == null)
+                return false;
 
             int minute = engine.State.Minute;
-            int goalDifference =
-                engine.State.HomeGoals - engine.State.AwayGoals;
 
-            float weight = 1f;
+            if (minute < cooldownUntil)
+                return false;
 
-            // Decisions become more important as the result becomes clearer.
-            if (minute >= 62)
-                weight += 0.15f;
+            if (plannedMinutes.Count == 0)
+                return false;
 
-            if (minute >= 76)
-                weight += 0.20f;
+            if (minute < plannedMinutes.Peek())
+                return false;
 
-            // Losing teams need more intervention opportunities.
-            if (goalDifference < 0)
-                weight += 0.20f;
-            else if (goalDifference > 0 && minute >= 70)
-                weight += 0.10f;
+            plannedMinutes.Dequeue();
 
-            // Tight matches are also tactically valuable.
-            if (Mathf.Abs(goalDifference) == 0)
-                weight += 0.10f;
+            cooldownUntil = minute + Random.Range(4, 8);
 
-            return weight;
+            return true;
+        }
+
+        private void Shuffle(List<int> list)
+        {
+            for (int i = 0; i < list.Count; i++)
+            {
+                int j = Random.Range(i, list.Count);
+
+                (list[i], list[j]) = (list[j], list[i]);
+            }
         }
     }
 }
