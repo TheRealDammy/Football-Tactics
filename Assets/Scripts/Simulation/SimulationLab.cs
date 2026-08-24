@@ -15,19 +15,13 @@ namespace FootballTactics.Simulation
         private void Start()
         {
             if (runOnStart)
-            {
                 RunAllBatchTests();
-            }
         }
 
         [ContextMenu("Run ALL Simulation Tests (Batch)")]
         public void RunAllBatchTests()
         {
-            if (matchesPerTest <= 0)
-            {
-                Debug.LogError("Simulation count must be greater than zero.");
-                return;
-            }
+            if (!ValidateCount()) return;
 
             float startTime = Time.realtimeSinceStartup;
 
@@ -42,6 +36,7 @@ namespace FootballTactics.Simulation
             RunPressingComparison();
             RunDefensiveLineComparison();
             RunSquadFormationMatrix();
+            RunManagerPersonalityComparison();
 
             Debug.Log(
                 "\n========================================\n" +
@@ -88,7 +83,6 @@ namespace FootballTactics.Simulation
 
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
-
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
 
@@ -133,7 +127,6 @@ namespace FootballTactics.Simulation
 
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
-
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
 
@@ -178,7 +171,6 @@ namespace FootballTactics.Simulation
 
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
-
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
 
@@ -223,7 +215,6 @@ namespace FootballTactics.Simulation
 
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
-
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
 
@@ -295,20 +286,91 @@ namespace FootballTactics.Simulation
 
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
-
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
 
             return new FormationMatrixResult(squad, formation, result);
         }
 
-        private void RunMatchToFullTime(MatchEngine engine)
+        [ContextMenu("Run Manager Personality Comparison")]
+        public void RunManagerPersonalityComparison()
+        {
+            if (!ValidateCount()) return;
+
+            Debug.Log("\n========== MANAGER PERSONALITY COMPARISON ==========");
+
+            foreach (ManagerPersonality personality in
+                     Enum.GetValues(typeof(ManagerPersonality)))
+            {
+                RunManagerPersonalityTest(personality);
+            }
+        }
+
+        private void RunManagerPersonalityTest(ManagerPersonality personality)
+        {
+            SimulationResult result = new();
+            int totalTacticalChanges = 0;
+
+            for (int i = 0; i < matchesPerTest; i++)
+            {
+                Team homeTeam = TeamFactory.CreateHomeTeam();
+                Team awayTeam = TeamFactory.CreateAwayTeam();
+
+                TacticalSettings homeTactics = new()
+                {
+                    Formation = Formation.FourThreeThree,
+                    Mentality = Mentality.Balanced,
+                    Pressing = Pressing.Medium,
+                    DefensiveLine = DefensiveLine.Normal
+                };
+
+                TacticalSettings awayTactics = new()
+                {
+                    Formation = Formation.FourFourTwo,
+                    Mentality = Mentality.Balanced,
+                    Pressing = Pressing.Medium,
+                    DefensiveLine = DefensiveLine.Normal
+                };
+
+                MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
+                ManagerPersonalityController manager =
+                    new(personality);
+
+                manager.ApplyInitialTactics(engine);
+                RunMatchToFullTime(engine, manager);
+
+                int changes = 0;
+                foreach (MatchEvent matchEvent in engine.State.Events)
+                {
+                    if (matchEvent.Description.Contains("change") ||
+                        matchEvent.Description.Contains("switch"))
+                    {
+                        changes++;
+                    }
+                }
+
+                totalTacticalChanges += changes;
+                result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
+            }
+
+            PrintTacticalResult(
+                $"MANAGER: {personality} | " +
+                $"Avg Tactical Changes: {(float)totalTacticalChanges / matchesPerTest:F2}",
+                result);
+        }
+
+        private void RunMatchToFullTime(
+            MatchEngine engine,
+            ManagerPersonalityController manager = null)
         {
             int safetyCounter = 0;
 
             while (engine.State.Minute < 90)
             {
                 engine.SimulateMinute();
+
+                if (manager != null)
+                    manager.Update(engine);
 
                 if (engine.PendingSituation != null)
                     engine.AutoResolvePendingSituation();
@@ -317,7 +379,8 @@ namespace FootballTactics.Simulation
 
                 if (safetyCounter > 200)
                 {
-                    Debug.LogError("Simulation aborted: match failed to reach full time.");
+                    Debug.LogError(
+                        "Simulation aborted: match failed to reach full time.");
                     return;
                 }
             }
