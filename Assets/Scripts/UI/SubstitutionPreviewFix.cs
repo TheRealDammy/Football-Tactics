@@ -5,12 +5,6 @@ using UnityEngine.UIElements;
 
 namespace FootballTactics.UI
 {
-    /// <summary>
-    /// Runtime presentation layer for the match substitution dialog.
-    /// Keeps the preview readable without requiring any scene setup.
-    /// The existing MatchScreenController remains responsible for selection
-    /// and actually making the substitution.
-    /// </summary>
     public sealed class SubstitutionPreviewFix : MonoBehaviour
     {
         private UIDocument document;
@@ -25,13 +19,10 @@ namespace FootballTactics.UI
             simulator = GetComponent<MatchSimulator>();
 
             if (simulator == null)
-                simulator = FindObjectOfType<MatchSimulator>();
+                simulator = FindFirstObjectByType<MatchSimulator>();
         }
 
-        private void OnEnable()
-        {
-            Refresh();
-        }
+        private void OnEnable() => Refresh();
 
         private void Update()
         {
@@ -87,10 +78,6 @@ namespace FootballTactics.UI
                 return;
 
             MatchEngine engine = simulator.Engine;
-
-            // MatchScreenController writes "Player A  →  Player B".
-            // Resolve those names against the actual squad and turn the
-            // compact string into a clear OFF / ON confirmation preview.
             int arrow = raw.IndexOf('→');
             if (arrow < 0)
                 return;
@@ -104,17 +91,12 @@ namespace FootballTactics.UI
             if (off == null && on == null)
                 return;
 
-            string offText = FormatPlayer(off, "No player selected");
-            string onText = FormatPlayer(on, "No player selected");
-
             preview.text =
-                "OFF\n" + offText +
+                "OFF\n" + FormatPlayer(off, "No player selected") +
                 "\n\n↓\n\n" +
-                "ON\n" + onText +
+                "ON\n" + FormatPlayer(on, "No player selected") +
                 "\n\n" +
-                (off != null && on != null
-                    ? "READY TO CONFIRM"
-                    : "Select both players");
+                (off != null && on != null ? "READY TO CONFIRM" : "Select both players");
 
             lastRawText = preview.text;
         }
@@ -125,16 +107,12 @@ namespace FootballTactics.UI
                 return null;
 
             foreach (Player player in engine.HomeLineup.Assignments.Values)
-            {
                 if (player != null && player.Name == name)
                     return player;
-            }
 
             foreach (Player player in engine.HomeTeam.Bench)
-            {
                 if (player != null && player.Name == name)
                     return player;
-            }
 
             return null;
         }
@@ -169,7 +147,7 @@ namespace FootballTactics.UI
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Install()
         {
-            UIDocument[] documents = FindObjectsOfType<UIDocument>(true);
+            UIDocument[] documents = FindObjectsByType<UIDocument>(FindObjectsSortMode.None);
 
             foreach (UIDocument doc in documents)
             {
