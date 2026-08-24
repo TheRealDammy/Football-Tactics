@@ -12,6 +12,8 @@ namespace FootballTactics.Simulation
         private readonly TacticalSettings homeTactics;
         private readonly TacticalSettings awayTactics;
 
+        private readonly DecisionOpportunityManager decisionManager;
+
         private Lineup homeLineup;
         private Lineup awayLineup;
 
@@ -62,6 +64,8 @@ namespace FootballTactics.Simulation
             homeLineup = LineupBuilder.BuildRecommendedLineup(homeTeam, homeTactics.Formation);
 
             awayLineup = LineupBuilder.BuildRecommendedLineup(awayTeam, awayTactics.Formation);
+
+            decisionManager = new DecisionOpportunityManager();
 
             State = new MatchState();
         }
@@ -371,34 +375,19 @@ namespace FootballTactics.Simulation
             if (pendingSituation != null)
                 return;
 
-            if (State.Minute < nextSituationMinute)
+            if (situationsShown >= 5)
                 return;
 
-            // Don't let the game overwhelm the player.
-            if (situationsShown >= 6)
+            if (!decisionManager.ShouldOfferDecision(this))
                 return;
-
-            // Some checkpoints are more likely to produce decisions.
-            float generationChance =
-                GetSituationGenerationChance();
-
-            if (Random.value > generationChance)
-            {
-                ScheduleNextSituation();
-                return;
-            }
 
             TacticalSituation situation =
                 TacticalSituationGenerator.Generate(this);
 
             if (situation == null)
-            {
-                ScheduleNextSituation();
                 return;
-            }
 
             pendingSituation = situation;
-
             situationsShown++;
         }
 

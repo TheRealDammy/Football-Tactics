@@ -4,103 +4,132 @@ using UnityEngine.UIElements;
 
 namespace FootballTactics.UI
 {
-    public sealed class PlayerDragHandler
+    /// <summary>
+    /// UI Toolkit drag detector for player cards/buttons.
+    /// Uses the left mouse button and keeps the drag alive while the pointer
+    /// moves across other UI elements. A normal left-button release completes
+    /// the drop; right-click never participates in the operation.
+    /// </summary>
+    public sealed class PlayerDragHandler : PointerManipulator
     {
-        private readonly VisualElement root;
-        private readonly VisualElement source;
+        private readonly Action onDragStarted;
         private readonly Action<Vector2> onDrop;
+        private readonly Action onDragCancelled;
 
         private Vector2 startPosition;
-
-        private bool pointerDown;
+        private int pointerId = -1;
+        private bool active;
         private bool dragging;
 
         public PlayerDragHandler(
             VisualElement root,
             VisualElement source,
-            Action<Vector2> onDrop)
+            Action<Vector2> onDrop,
+            Action onDragStarted = null,
+            Action onDragCancelled = null)
         {
-            this.root = root;
-            this.source = source;
             this.onDrop = onDrop;
+            this.onDragStarted = onDragStarted;
+            this.onDragCancelled = onDragCancelled;
+            target = source;
 
-            source.RegisterCallback<PointerDownEvent>(
-                OnPointerDown);
+            activators.Add(new ManipulatorActivationFilter
+            {
+                button = MouseButton.LeftMouse
+            });
 
-            source.RegisterCallback<PointerMoveEvent>(
-                OnPointerMove);
-
-            source.RegisterCallback<PointerUpEvent>(
-                OnPointerUp);
+            source.AddManipulator(this);
         }
 
-        private void OnPointerDown(
-            PointerDownEvent evt)
+        protected override void RegisterCallbacksOnTarget()
         {
-            pointerDown = true;
-            dragging = false;
-
-            startPosition =
-                evt.position;
-
-            source.CapturePointer(
-                evt.pointerId);
-
-            evt.StopPropagation();
+            target.RegisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+            target.RegisterCallback<PointerMoveEvent>(OnPointerMove);
+            target.RegisterCallback<PointerUpEvent>(OnPointerUp, TrickleDown.TrickleDown);
+            target.RegisterCallback<PointerCancelEvent>(OnPointerCancel);
         }
 
-        private void OnPointerMove(
-            PointerMoveEvent evt)
+        protected override void UnregisterCallbacksFromTarget()
         {
-            if (!pointerDown)
+            target.UnregisterCallback<PointerDownEvent>(OnPointerDown, TrickleDown.TrickleDown);
+            target.UnregisterCallback<PointerMoveEvent>(OnPointerMove);
+            target.UnregisterCallback<PointerUpEvent>(OnPointerUp, TrickleDown.TrickleDown);
+            target.UnregisterCallback<PointerCancelEvent>(OnPointerCancel);
+        }
+
+        private void OnPointerDown(PointerDownEvent evt)
+        {
+            if (active || evt.button != (int)MouseButton.LeftMouse)
                 return;
 
-            float distance =
-                Vector2.Distance(
-                    startPosition,
-                    evt.position);
+            active = true;
+            dragging = false;
+            pointerId = evt.pointerId;
+            startPosition = evt.position;
 
-            if (!dragging &&
-                distance > 8f)
+            target.CapturePointer(pointerId);
+        }
+
+        private void OnPointerMove(PointerMoveEvent evt)
+        {
+            if (!active || evt.pointerId != pointerId)
+                return;
+
+            if (!dragging && Vector2.Distance(startPosition, evt.position) >= 8f)
             {
                 dragging = true;
-
-                source.AddToClassList(
-                    "dragging-player");
+                target.AddToClassList("dragging-player");
+                onDragStarted?.Invoke();
             }
 
             if (dragging)
+                evt.StopPropagation();
+        }
+
+        private void OnPointerUp(PointerUpEvent evt)
+        {
+            if (!active || evt.pointerId != pointerId || evt.button != (int)MouseButton.LeftMouse)
+                return;
+
+            Vector2 dropPosition = evt.position;
+            bool wasDragging = dragging;
+
+            active = false;
+            dragging = false;
+            target.RemoveFromClassList("dragging-player");
+
+            if (target.HasPointerCapture(pointerId))
+                target.ReleasePointer(pointerId);
+
+            pointerId = -1;
+
+            if (wasDragging)
             {
+                onDrop?.Invoke(dropPosition);
                 evt.StopPropagation();
             }
         }
 
-        private void OnPointerUp(
-            PointerUpEvent evt)
+        private void OnPointerCancel(PointerCancelEvent evt)
         {
-            if (!pointerDown)
-                return;
+            CancelDrag();
+        }
 
-            if (dragging)
-            {
-                onDrop(
-                    evt.position);
-            }
+        private void CancelDrag()
+        {
+            bool wasDragging = dragging;
 
-            pointerDown = false;
+            active = false;
             dragging = false;
+            target.RemoveFromClassList("dragging-player");
 
-            source.RemoveFromClassList(
-                "dragging-player");
+            if (pointerId >= 0 && target.HasPointerCapture(pointerId))
+                target.ReleasePointer(pointerId);
 
-            if (source.HasPointerCapture(
-                    evt.pointerId))
-            {
-                source.ReleasePointer(
-                    evt.pointerId);
-            }
+            pointerId = -1;
 
-            evt.StopPropagation();
+            if (wasDragging)
+                onDragCancelled?.Invoke();
         }
     }
 }
