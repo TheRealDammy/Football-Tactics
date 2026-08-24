@@ -22,23 +22,20 @@ namespace FootballTactics.Simulation
         {
             plannedMinutes.Clear();
 
-            // Build a varied match rhythm. We deliberately guarantee an
-            // early/mid-game opportunity and only allow one or two late ones.
-            int count = Random.Range(3, 6); // 3-5 decisions per match.
+            int count = Random.Range(3, 6);
 
             List<int> candidates = new()
             {
-                Random.Range(12, 20), // early
-                Random.Range(23, 32), // first main phase
-                Random.Range(35, 44), // end of first half
-                Random.Range(50, 59), // start of second half
-                Random.Range(63, 73), // main tactical/substitution phase
-                Random.Range(77, 87)  // late game
+                Random.Range(12, 20),
+                Random.Range(23, 32),
+                Random.Range(35, 44),
+                Random.Range(50, 59),
+                Random.Range(63, 73),
+                Random.Range(77, 87)
             };
 
             Shuffle(candidates);
 
-            // Always include at least one opportunity before 60'.
             int earlyCount = Random.Range(2, 4);
             for (int i = 0; i < earlyCount && plannedMinutes.Count < count; i++)
             {
@@ -46,7 +43,6 @@ namespace FootballTactics.Simulation
                 plannedMinutes.Enqueue(candidates[index]);
             }
 
-            // Fill remaining slots, but cap late-game decisions at two.
             List<int> remaining = new(candidates);
             remaining.RemoveAll(m => plannedMinutes.Contains(m));
 
@@ -94,12 +90,43 @@ namespace FootballTactics.Simulation
                 return false;
 
             plannedMinutes.Dequeue();
-
-            // Prevent decisions from stacking even if the match advances
-            // through several planned windows quickly.
             cooldownUntil = minute + Random.Range(5, 9);
 
             return true;
+        }
+
+        // Compatibility helpers used by TacticalSituationGenerator.
+        // The actual scheduling decision is still controlled by the instance
+        // manager above; these methods only prevent older generator code from
+        // bypassing the new rhythm system at compile/runtime.
+        public static bool IsDecisionWindow(MatchEngine engine)
+        {
+            if (engine == null || engine.State == null)
+                return false;
+
+            return engine.State.Minute >= 8 && engine.State.Minute < 90;
+        }
+
+        public static float GetDecisionWeight(MatchEngine engine)
+        {
+            if (engine == null || engine.State == null)
+                return 1f;
+
+            int minute = engine.State.Minute;
+
+            if (minute < 20)
+                return 0.90f;
+
+            if (minute < 40)
+                return 1.00f;
+
+            if (minute < 60)
+                return 1.05f;
+
+            if (minute < 75)
+                return 1.10f;
+
+            return 1.05f;
         }
 
         private static void Shuffle(List<int> list)
