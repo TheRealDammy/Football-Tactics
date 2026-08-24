@@ -12,6 +12,7 @@ namespace FootballTactics.Simulation
         private FootballTacticsInputActions input;
 
         private MatchEngine matchEngine;
+        private TacticalDecisionEffectRuntime decisionEffects;
 
         private Team homeTeam;
         private Team awayTeam;
@@ -28,6 +29,7 @@ namespace FootballTactics.Simulation
         private void Awake()
         {
             input = new FootballTacticsInputActions();
+            decisionEffects = new TacticalDecisionEffectRuntime();
 
             input.Match.AdvanceMinute.performed +=
                 OnAdvanceMinute;
@@ -72,7 +74,9 @@ namespace FootballTactics.Simulation
                     DefensiveLine = DefensiveLine.Normal
                 };
 
-            Lineup homeLineup = LineupBuilder.BuildFromSlotViews(formation,  slotViews);
+            Lineup homeLineup = LineupBuilder.BuildFromSlotViews(
+                formation,
+                slotViews);
 
             if (!homeTeam.ApplyStartingLineup(homeLineup))
             {
@@ -93,20 +97,7 @@ namespace FootballTactics.Simulation
                 homeLineup);
         }
 
-        private static Player FindPlayerByName(
-            Team team,
-            string name)
-        {
-            foreach (Player player in team.Players)
-            {
-                if (player.Name == name)
-                    return player;
-            }
-
-            return null;
-        }
-
-        private void OnAdvanceMinute( InputAction.CallbackContext context)
+        private void OnAdvanceMinute(InputAction.CallbackContext context)
         {
             if (matchEngine == null)
                 return;
@@ -115,6 +106,7 @@ namespace FootballTactics.Simulation
                 return;
 
             matchEngine.SimulateMinute();
+            decisionEffects?.Tick(matchEngine);
 
             if (matchEngine.State.Minute >= 90)
             {
@@ -156,10 +148,37 @@ namespace FootballTactics.Simulation
                        playerOff);
         }
 
-        public bool ResolveSituation( string optionId)
+        public bool ResolveSituation(string optionId)
         {
-            return matchEngine != null &&
-                   matchEngine.ResolveSituation(optionId);
+            if (matchEngine == null ||
+                matchEngine.PendingSituation == null)
+            {
+                return false;
+            }
+
+            TacticalSituationOption selected = null;
+
+            foreach (TacticalSituationOption option in
+                     matchEngine.PendingSituation.Options)
+            {
+                if (option.Id == optionId)
+                {
+                    selected = option;
+                    break;
+                }
+            }
+
+            if (selected == null)
+                return false;
+
+            if (!matchEngine.ResolveSituation(optionId))
+                return false;
+
+            decisionEffects?.Apply(
+                matchEngine,
+                selected);
+
+            return true;
         }
 
         private void OnEnable()
