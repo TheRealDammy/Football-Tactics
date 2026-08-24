@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace FootballTactics.Simulation
 {
     public enum Mentality
@@ -21,14 +23,21 @@ namespace FootballTactics.Simulation
         High
     }
 
+    public enum ManagerPersonality
+    {
+        Balanced,
+        Possession,
+        Gegenpress,
+        CounterAttack,
+        Pragmatic,
+        Direct
+    }
+
     public class TacticalSettings
     {
         public Formation Formation { get; set; } = Formation.FourThreeThree;
-
         public Mentality Mentality { get; set; } = Mentality.Balanced;
-
         public Pressing Pressing { get; set; } = Pressing.Medium;
-
         public DefensiveLine DefensiveLine { get; set; } = DefensiveLine.Normal;
 
         public float GetAttackModifier()
@@ -117,6 +126,113 @@ namespace FootballTactics.Simulation
                 DefensiveLine.High => 1.06f,
                 _ => 1.00f
             };
+        }
+    }
+
+    public sealed class ManagerPersonalityController
+    {
+        public ManagerPersonality Personality { get; }
+        private int lastChangeMinute = -10;
+
+        public ManagerPersonalityController(ManagerPersonality personality)
+        {
+            Personality = personality;
+        }
+
+        public void ApplyInitialTactics(MatchEngine engine)
+        {
+            switch (Personality)
+            {
+                case ManagerPersonality.Possession:
+                    ApplyDirect(engine, Formation.FourTwoThreeOne, Mentality.Balanced, Pressing.Medium, DefensiveLine.Normal, false);
+                    break;
+                case ManagerPersonality.Gegenpress:
+                    ApplyDirect(engine, Formation.FourThreeThree, Mentality.Attacking, Pressing.High, DefensiveLine.High, false);
+                    break;
+                case ManagerPersonality.CounterAttack:
+                    ApplyDirect(engine, Formation.FourFourTwo, Mentality.Balanced, Pressing.Low, DefensiveLine.Deep, false);
+                    break;
+                case ManagerPersonality.Pragmatic:
+                    ApplyDirect(engine, Formation.FourFourTwo, Mentality.Defensive, Pressing.Low, DefensiveLine.Deep, false);
+                    break;
+                case ManagerPersonality.Direct:
+                    ApplyDirect(engine, Formation.FourFourTwo, Mentality.Attacking, Pressing.Medium, DefensiveLine.Normal, false);
+                    break;
+                default:
+                    ApplyDirect(engine, Formation.FourThreeThree, Mentality.Balanced, Pressing.Medium, DefensiveLine.Normal, false);
+                    break;
+            }
+        }
+
+        public void Update(MatchEngine engine)
+        {
+            int minute = engine.State.Minute;
+            if (minute - lastChangeMinute < 8)
+                return;
+
+            bool losing = engine.State.AwayGoals < engine.State.HomeGoals;
+            bool winning = engine.State.AwayGoals > engine.State.HomeGoals;
+
+            switch (Personality)
+            {
+                case ManagerPersonality.Gegenpress:
+                    if (losing && minute >= 55)
+                        Apply(engine, Mentality.Attacking, Pressing.High, DefensiveLine.High);
+                    else if (winning && minute >= 75)
+                        Apply(engine, Mentality.Attacking, Pressing.High, DefensiveLine.Normal);
+                    break;
+                case ManagerPersonality.CounterAttack:
+                    if (losing && minute >= 60)
+                        Apply(engine, Mentality.Attacking, Pressing.Medium, DefensiveLine.Normal);
+                    else if (winning && minute >= 70)
+                        Apply(engine, Mentality.Defensive, Pressing.Low, DefensiveLine.Deep);
+                    break;
+                case ManagerPersonality.Pragmatic:
+                    if (winning && minute >= 55)
+                        Apply(engine, Mentality.Defensive, Pressing.Low, DefensiveLine.Deep);
+                    else if (losing && minute >= 70)
+                        Apply(engine, Mentality.Attacking, Pressing.Medium, DefensiveLine.Normal);
+                    break;
+                case ManagerPersonality.Possession:
+                    if (losing && minute >= 55)
+                        Apply(engine, Mentality.Attacking, Pressing.Medium, DefensiveLine.Normal);
+                    else if (winning && minute >= 70)
+                        Apply(engine, Mentality.Balanced, Pressing.Medium, DefensiveLine.Normal);
+                    break;
+                case ManagerPersonality.Direct:
+                    if (losing && minute >= 55)
+                        Apply(engine, Mentality.Attacking, Pressing.High, DefensiveLine.Normal);
+                    else if (winning && minute >= 75)
+                        Apply(engine, Mentality.Balanced, Pressing.Medium, DefensiveLine.Normal);
+                    break;
+                default:
+                    if (losing && minute >= 65)
+                        Apply(engine, Mentality.Attacking, Pressing.Medium, DefensiveLine.High);
+                    else if (winning && minute >= 75)
+                        Apply(engine, Mentality.Defensive, Pressing.Low, DefensiveLine.Deep);
+                    break;
+            }
+        }
+
+        private void Apply(MatchEngine engine, Mentality mentality, Pressing pressing, DefensiveLine line)
+        {
+            if (engine.AwayTactics.Mentality == mentality &&
+                engine.AwayTactics.Pressing == pressing &&
+                engine.AwayTactics.DefensiveLine == line)
+                return;
+
+            engine.SetAwayMentality(mentality);
+            engine.SetAwayPressing(pressing);
+            engine.SetAwayDefensiveLine(line);
+            lastChangeMinute = engine.State.Minute;
+        }
+
+        private void ApplyDirect(MatchEngine engine, Formation formation, Mentality mentality, Pressing pressing, DefensiveLine line, bool createEvent)
+        {
+            engine.SetAwayFormation(formation, createEvent);
+            engine.SetAwayMentality(mentality, createEvent);
+            engine.SetAwayPressing(pressing, createEvent);
+            engine.SetAwayDefensiveLine(line, createEvent);
         }
     }
 }
