@@ -6,30 +6,22 @@ namespace FootballTactics.Simulation
 {
     public class SimulationLab : MonoBehaviour
     {
-        [SerializeField]
-        private int matchesPerTest = 1000;
-
-        [SerializeField]
-        private bool runOnStart = false;
+        [SerializeField] private int matchesPerTest = 1000;
+        [SerializeField] private bool runOnStart = false;
 
         private void Start()
         {
-            if (runOnStart)
-                RunAllBatchTests();
+            if (runOnStart) RunAllBatchTests();
         }
 
         [ContextMenu("Run ALL Simulation Tests (Batch)")]
         public void RunAllBatchTests()
         {
             if (!ValidateCount()) return;
-
             float startTime = Time.realtimeSinceStartup;
 
-            Debug.Log(
-                "\n========================================\n" +
-                "===== SIMULATION LAB - FULL BATCH =====\n" +
-                "========================================\n" +
-                $"Matches per test: {matchesPerTest}\n");
+            Debug.Log("\n========================================\n===== SIMULATION LAB - FULL BATCH =====\n========================================\n" +
+                      $"Matches per test: {matchesPerTest}\n");
 
             RunFormationComparison();
             RunMentalityComparison();
@@ -38,18 +30,14 @@ namespace FootballTactics.Simulation
             RunSquadFormationMatrix();
             RunManagerPersonalityComparison();
 
-            Debug.Log(
-                "\n========================================\n" +
-                "===== SIMULATION LAB BATCH COMPLETE ====\n" +
-                "========================================\n" +
-                $"Elapsed: {Time.realtimeSinceStartup - startTime:F1}s\n");
+            Debug.Log("\n========================================\n===== SIMULATION LAB BATCH COMPLETE ====\n========================================\n" +
+                      $"Elapsed: {Time.realtimeSinceStartup - startTime:F1}s\n");
         }
 
         [ContextMenu("Run Formation Comparison")]
         public void RunFormationComparison()
         {
             if (!ValidateCount()) return;
-
             Debug.Log("\n========== FORMATION COMPARISON ==========");
             RunFormationTest(Formation.FourFourTwo);
             RunFormationTest(Formation.FourThreeThree);
@@ -59,33 +47,16 @@ namespace FootballTactics.Simulation
         private void RunFormationTest(Formation formation)
         {
             SimulationResult result = new();
-
             for (int i = 0; i < matchesPerTest; i++)
             {
                 Team homeTeam = TeamFactory.CreateHomeTeam();
                 Team awayTeam = TeamFactory.CreateAwayTeam();
-
-                TacticalSettings homeTactics = new()
-                {
-                    Formation = formation,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
-                TacticalSettings awayTactics = new()
-                {
-                    Formation = Formation.FourFourTwo,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
+                TacticalSettings homeTactics = new() { Formation = formation, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
+                TacticalSettings awayTactics = new() { Formation = Formation.FourFourTwo, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
-
             PrintResult(formation, result);
         }
 
@@ -93,7 +64,6 @@ namespace FootballTactics.Simulation
         public void RunMentalityComparison()
         {
             if (!ValidateCount()) return;
-
             Debug.Log("\n========== MENTALITY COMPARISON ==========");
             RunTacticalTest(Mentality.Defensive);
             RunTacticalTest(Mentality.Balanced);
@@ -103,33 +73,16 @@ namespace FootballTactics.Simulation
         private void RunTacticalTest(Mentality mentality)
         {
             SimulationResult result = new();
-
             for (int i = 0; i < matchesPerTest; i++)
             {
                 Team homeTeam = TeamFactory.CreateHomeTeam();
                 Team awayTeam = TeamFactory.CreateAwayTeam();
-
-                TacticalSettings homeTactics = new()
-                {
-                    Formation = Formation.FourThreeThree,
-                    Mentality = mentality,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
-                TacticalSettings awayTactics = new()
-                {
-                    Formation = Formation.FourFourTwo,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
+                TacticalSettings homeTactics = new() { Formation = Formation.FourThreeThree, Mentality = mentality, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
+                TacticalSettings awayTactics = new() { Formation = Formation.FourFourTwo, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
-
             PrintTacticalResult($"MENTALITY: {mentality}", result);
         }
 
@@ -137,7 +90,6 @@ namespace FootballTactics.Simulation
         public void RunPressingComparison()
         {
             if (!ValidateCount()) return;
-
             Debug.Log("\n========== PRESSING COMPARISON ==========");
             RunPressingTest(Pressing.Low);
             RunPressingTest(Pressing.Medium);
@@ -147,33 +99,16 @@ namespace FootballTactics.Simulation
         private void RunPressingTest(Pressing pressing)
         {
             SimulationResult result = new();
-
             for (int i = 0; i < matchesPerTest; i++)
             {
                 Team homeTeam = TeamFactory.CreateHomeTeam();
                 Team awayTeam = TeamFactory.CreateAwayTeam();
-
-                TacticalSettings homeTactics = new()
-                {
-                    Formation = Formation.FourThreeThree,
-                    Mentality = Mentality.Balanced,
-                    Pressing = pressing,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
-                TacticalSettings awayTactics = new()
-                {
-                    Formation = Formation.FourFourTwo,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
+                TacticalSettings homeTactics = new() { Formation = Formation.FourThreeThree, Mentality = Mentality.Balanced, Pressing = pressing, DefensiveLine = DefensiveLine.Normal };
+                TacticalSettings awayTactics = new() { Formation = Formation.FourFourTwo, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
-
             PrintTacticalResult($"PRESSING: {pressing}", result);
         }
 
@@ -181,7 +116,6 @@ namespace FootballTactics.Simulation
         public void RunDefensiveLineComparison()
         {
             if (!ValidateCount()) return;
-
             Debug.Log("\n========== DEFENSIVE LINE COMPARISON ==========");
             RunDefensiveLineTest(DefensiveLine.Deep);
             RunDefensiveLineTest(DefensiveLine.Normal);
@@ -191,33 +125,16 @@ namespace FootballTactics.Simulation
         private void RunDefensiveLineTest(DefensiveLine defensiveLine)
         {
             SimulationResult result = new();
-
             for (int i = 0; i < matchesPerTest; i++)
             {
                 Team homeTeam = TeamFactory.CreateHomeTeam();
                 Team awayTeam = TeamFactory.CreateAwayTeam();
-
-                TacticalSettings homeTactics = new()
-                {
-                    Formation = Formation.FourThreeThree,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = defensiveLine
-                };
-
-                TacticalSettings awayTactics = new()
-                {
-                    Formation = Formation.FourFourTwo,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
+                TacticalSettings homeTactics = new() { Formation = Formation.FourThreeThree, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = defensiveLine };
+                TacticalSettings awayTactics = new() { Formation = Formation.FourFourTwo, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
-
             PrintTacticalResult($"DEFENSIVE LINE: {defensiveLine}", result);
         }
 
@@ -225,36 +142,15 @@ namespace FootballTactics.Simulation
         public void RunSquadFormationMatrix()
         {
             if (!ValidateCount()) return;
-
-            SquadArchetype[] squads =
-            {
-                SquadArchetype.Possession,
-                SquadArchetype.WideAttack,
-                SquadArchetype.Direct
-            };
-
-            Formation[] formations =
-            {
-                Formation.FourFourTwo,
-                Formation.FourThreeThree,
-                Formation.FourTwoThreeOne
-            };
-
+            SquadArchetype[] squads = { SquadArchetype.Possession, SquadArchetype.WideAttack, SquadArchetype.Direct };
+            Formation[] formations = { Formation.FourFourTwo, Formation.FourThreeThree, Formation.FourTwoThreeOne };
             foreach (SquadArchetype squad in squads)
             {
                 Debug.Log($"\n========== {squad.DisplayName()} ==========");
-
                 foreach (Formation formation in formations)
                 {
                     FormationMatrixResult result = RunMatrixTest(squad, formation);
-
-                    Debug.Log(
-                        $"{FormatFormation(formation)} | " +
-                        $"Win {result.WinRate:F1}% | " +
-                        $"Goals {result.AverageGoals:F2} | " +
-                        $"Poss {result.AveragePossession:F1}% | " +
-                        $"Shots {result.AverageShots:F2} | " +
-                        $"xG {result.AverageXG:F2}");
+                    Debug.Log($"{FormatFormation(formation)} | Win {result.WinRate:F1}% | Goals {result.AverageGoals:F2} | Poss {result.AveragePossession:F1}% | Shots {result.AverageShots:F2} | xG {result.AverageXG:F2}");
                 }
             }
         }
@@ -262,33 +158,16 @@ namespace FootballTactics.Simulation
         private FormationMatrixResult RunMatrixTest(SquadArchetype squad, Formation formation)
         {
             SimulationResult result = new();
-
             for (int i = 0; i < matchesPerTest; i++)
             {
                 Team homeTeam = TestSquadFactory.Create(squad, $"{squad} Home");
                 Team awayTeam = TeamFactory.CreateHomeTeam();
-
-                TacticalSettings homeTactics = new()
-                {
-                    Formation = formation,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
-                TacticalSettings awayTactics = new()
-                {
-                    Formation = Formation.FourFourTwo,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
+                TacticalSettings homeTactics = new() { Formation = formation, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
+                TacticalSettings awayTactics = new() { Formation = Formation.FourFourTwo, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
                 RunMatchToFullTime(engine);
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
-
             return new FormationMatrixResult(squad, formation, result);
         }
 
@@ -296,91 +175,74 @@ namespace FootballTactics.Simulation
         public void RunManagerPersonalityComparison()
         {
             if (!ValidateCount()) return;
-
             Debug.Log("\n========== MANAGER PERSONALITY COMPARISON ==========");
-
-            foreach (ManagerPersonality personality in
-                     Enum.GetValues(typeof(ManagerPersonality)))
-            {
+            foreach (ManagerPersonality personality in Enum.GetValues(typeof(ManagerPersonality)))
                 RunManagerPersonalityTest(personality);
-            }
         }
 
         private void RunManagerPersonalityTest(ManagerPersonality personality)
         {
             SimulationResult result = new();
-            int totalTacticalChanges = 0;
+            int tacticalChanges = 0;
+            int mentalityChanges = 0;
+            int pressingChanges = 0;
+            int defensiveLineChanges = 0;
+            int formationChanges = 0;
+            int decisions = 0;
+            int earlyDecisions = 0;
+            int midDecisions = 0;
+            int lateDecisions = 0;
 
             for (int i = 0; i < matchesPerTest; i++)
             {
                 Team homeTeam = TeamFactory.CreateHomeTeam();
                 Team awayTeam = TeamFactory.CreateAwayTeam();
-
-                TacticalSettings homeTactics = new()
-                {
-                    Formation = Formation.FourThreeThree,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
-                TacticalSettings awayTactics = new()
-                {
-                    Formation = Formation.FourFourTwo,
-                    Mentality = Mentality.Balanced,
-                    Pressing = Pressing.Medium,
-                    DefensiveLine = DefensiveLine.Normal
-                };
-
+                TacticalSettings homeTactics = new() { Formation = Formation.FourThreeThree, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
+                TacticalSettings awayTactics = new() { Formation = Formation.FourFourTwo, Mentality = Mentality.Balanced, Pressing = Pressing.Medium, DefensiveLine = DefensiveLine.Normal };
                 MatchEngine engine = new(homeTeam, awayTeam, homeTactics, awayTactics);
-                ManagerPersonalityController manager =
-                    new(personality);
-
+                ManagerPersonalityController manager = new(personality);
                 manager.ApplyInitialTactics(engine);
                 RunMatchToFullTime(engine, manager);
 
-                int changes = 0;
-                foreach (MatchEvent matchEvent in engine.State.Events)
-                {
-                    if (matchEvent.Description.Contains("change") ||
-                        matchEvent.Description.Contains("switch"))
-                    {
-                        changes++;
-                    }
-                }
+                tacticalChanges += manager.TotalTacticalChanges;
+                mentalityChanges += manager.MentalityChanges;
+                pressingChanges += manager.PressingChanges;
+                defensiveLineChanges += manager.DefensiveLineChanges;
+                formationChanges += manager.FormationChanges;
+                decisions += manager.Decisions;
+                earlyDecisions += manager.EarlyDecisions;
+                midDecisions += manager.MidDecisions;
+                lateDecisions += manager.LateDecisions;
 
-                totalTacticalChanges += changes;
                 result.Record(engine.State, homeTeam.GetAverageFitness(engine.HomeLineup));
             }
 
-            PrintTacticalResult(
-                $"MANAGER: {personality} | " +
-                $"Avg Tactical Changes: {(float)totalTacticalChanges / matchesPerTest:F2}",
-                result);
+            float divisor = matchesPerTest;
+            PrintTacticalResult($"MANAGER: {personality}", result);
+            Debug.Log(
+                $"Behaviour | Changes {tacticalChanges / divisor:F2} | " +
+                $"Mentality {mentalityChanges / divisor:F2} | " +
+                $"Pressing {pressingChanges / divisor:F2} | " +
+                $"Defensive Line {defensiveLineChanges / divisor:F2} | " +
+                $"Formation {formationChanges / divisor:F2}\n" +
+                $"Decisions | Total {decisions / divisor:F2} | " +
+                $"0-30 {earlyDecisions / divisor:F2} | " +
+                $"31-60 {midDecisions / divisor:F2} | " +
+                $"61-90 {lateDecisions / divisor:F2}");
         }
 
-        private void RunMatchToFullTime(
-            MatchEngine engine,
-            ManagerPersonalityController manager = null)
+        private void RunMatchToFullTime(MatchEngine engine, ManagerPersonalityController manager = null)
         {
             int safetyCounter = 0;
-
             while (engine.State.Minute < 90)
             {
                 engine.SimulateMinute();
-
-                if (manager != null)
-                    manager.Update(engine);
-
-                if (engine.PendingSituation != null)
-                    engine.AutoResolvePendingSituation();
-
+                if (manager != null) manager.Update(engine);
+                if (engine.PendingSituation != null) engine.AutoResolvePendingSituation();
                 safetyCounter++;
-
                 if (safetyCounter > 200)
                 {
-                    Debug.LogError(
-                        "Simulation aborted: match failed to reach full time.");
+                    Debug.LogError("Simulation aborted: match failed to reach full time.");
                     return;
                 }
             }
@@ -388,45 +250,21 @@ namespace FootballTactics.Simulation
 
         private bool ValidateCount()
         {
-            if (matchesPerTest > 0)
-                return true;
-
+            if (matchesPerTest > 0) return true;
             Debug.LogError("Simulation count must be greater than zero.");
             return false;
         }
 
         private void PrintResult(Formation formation, SimulationResult result)
         {
-            Debug.Log(
-                "\n" +
-                $"===== {FormatFormation(formation)} =====\n" +
-                $"Matches:        {result.Matches}\n" +
-                $"Wins:           {result.Wins}\n" +
-                $"Draws:          {result.Draws}\n" +
-                $"Losses:         {result.Losses}\n" +
-                $"Win Rate:       {result.WinRate:F1}%\n" +
-                $"Avg Goals:      {result.AverageGoals:F2}\n" +
-                $"Avg Possession: {result.AveragePossession:F1}%\n" +
-                $"Avg Shots:      {result.AverageShots:F2}\n" +
-                $"Avg xG:          {result.AverageXG:F2}\n" +
-                $"Avg Fitness:    {result.AverageFitness:F1}%");
+            Debug.Log("\n===== " + FormatFormation(formation) + " =====\n" +
+                      $"Matches:        {result.Matches}\nWins:           {result.Wins}\nDraws:          {result.Draws}\nLosses:         {result.Losses}\nWin Rate:       {result.WinRate:F1}%\nAvg Goals:      {result.AverageGoals:F2}\nAvg Possession: {result.AveragePossession:F1}%\nAvg Shots:      {result.AverageShots:F2}\nAvg xG:          {result.AverageXG:F2}\nAvg Fitness:    {result.AverageFitness:F1}%");
         }
 
         private void PrintTacticalResult(string title, SimulationResult result)
         {
-            Debug.Log(
-                "\n" +
-                $"===== {title} =====\n" +
-                $"Matches:        {result.Matches}\n" +
-                $"Wins:           {result.Wins}\n" +
-                $"Draws:          {result.Draws}\n" +
-                $"Losses:         {result.Losses}\n" +
-                $"Win Rate:       {result.WinRate:F1}%\n" +
-                $"Avg Goals:      {result.AverageGoals:F2}\n" +
-                $"Avg Possession: {result.AveragePossession:F1}%\n" +
-                $"Avg Shots:      {result.AverageShots:F2}\n" +
-                $"Avg xG:          {result.AverageXG:F2}\n" +
-                $"Avg Fitness:    {result.AverageFitness:F1}%");
+            Debug.Log("\n===== " + title + " =====\n" +
+                      $"Matches:        {result.Matches}\nWins:           {result.Wins}\nDraws:          {result.Draws}\nLosses:         {result.Losses}\nWin Rate:       {result.WinRate:F1}%\nAvg Goals:      {result.AverageGoals:F2}\nAvg Possession: {result.AveragePossession:F1}%\nAvg Shots:      {result.AverageShots:F2}\nAvg xG:          {result.AverageXG:F2}\nAvg Fitness:    {result.AverageFitness:F1}%");
         }
 
         private static string FormatFormation(Formation formation)
