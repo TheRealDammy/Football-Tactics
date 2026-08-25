@@ -57,7 +57,7 @@ namespace FootballTactics.Simulation
                         personality,
                         Formation.FourTwoThreeOne,
                         Mentality.Balanced,
-                        Pressing.Medium,
+                        Pressing.Low,
                         DefensiveLine.Deep);
 
                 case ManagerPersonality.Pragmatic:
@@ -66,7 +66,7 @@ namespace FootballTactics.Simulation
                         Formation.FourFourTwo,
                         Mentality.Balanced,
                         Pressing.Low,
-                        DefensiveLine.Deep);
+                        DefensiveLine.Normal);
 
                 case ManagerPersonality.Direct:
                     return new ManagerProfile(
