@@ -23,16 +23,6 @@ namespace FootballTactics.Simulation
         High
     }
 
-    public enum ManagerPersonality
-    {
-        Balanced,
-        Possession,
-        Gegenpress,
-        CounterAttack,
-        Pragmatic,
-        Direct
-    }
-
     public class TacticalSettings
     {
         public Formation Formation { get; set; } = Formation.FourThreeThree;
@@ -141,27 +131,14 @@ namespace FootballTactics.Simulation
 
         public void ApplyInitialTactics(MatchEngine engine)
         {
-            switch (Personality)
-            {
-                case ManagerPersonality.Possession:
-                    ApplyDirect(engine, Formation.FourTwoThreeOne, Mentality.Balanced, Pressing.Medium, DefensiveLine.Normal, false);
-                    break;
-                case ManagerPersonality.Gegenpress:
-                    ApplyDirect(engine, Formation.FourThreeThree, Mentality.Attacking, Pressing.High, DefensiveLine.High, false);
-                    break;
-                case ManagerPersonality.CounterAttack:
-                    ApplyDirect(engine, Formation.FourFourTwo, Mentality.Balanced, Pressing.Low, DefensiveLine.Deep, false);
-                    break;
-                case ManagerPersonality.Pragmatic:
-                    ApplyDirect(engine, Formation.FourFourTwo, Mentality.Defensive, Pressing.Low, DefensiveLine.Deep, false);
-                    break;
-                case ManagerPersonality.Direct:
-                    ApplyDirect(engine, Formation.FourFourTwo, Mentality.Attacking, Pressing.Medium, DefensiveLine.Normal, false);
-                    break;
-                default:
-                    ApplyDirect(engine, Formation.FourThreeThree, Mentality.Balanced, Pressing.Medium, DefensiveLine.Normal, false);
-                    break;
-            }
+            ManagerProfile profile = ManagerProfile.Create(Personality);
+            ApplyDirect(
+                engine,
+                profile.PreferredFormation,
+                profile.DefaultMentality,
+                profile.DefaultPressing,
+                profile.DefaultDefensiveLine,
+                false);
         }
 
         public void Update(MatchEngine engine)
