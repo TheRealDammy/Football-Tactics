@@ -2,233 +2,219 @@ using UnityEngine;
 
 namespace FootballTactics.Simulation
 {
-    /// <summary>
-    /// Applies a manager profile to the home side and makes personality-specific,
-    /// score-aware tactical adjustments during a simulated match.
-    /// </summary>
+    public enum ManagerPersonality
+    {
+        Balanced,
+        Possession,
+        Gegenpress,
+        CounterAttack,
+        Pragmatic,
+        Direct
+    }
+
     public sealed class ManagerPersonalityController
     {
-        private readonly ManagerProfile profile;
-        private int lastChangeMinute = -99;
+        private readonly ManagerPersonality personality;
+        private int nextDecisionMinute;
+        private int lastDecisionMinute = -10;
 
-        public ManagerPersonality Personality => profile.Personality;
-        public int TotalTacticalChanges { get; private set; }
+        public ManagerPersonality Personality => personality;
+        public int Decisions { get; private set; }
+        public int TotalDecisions => Decisions;
         public int MentalityChanges { get; private set; }
         public int PressingChanges { get; private set; }
         public int DefensiveLineChanges { get; private set; }
         public int FormationChanges { get; private set; }
-        public int Decisions { get; private set; }
         public int EarlyDecisions { get; private set; }
         public int MidDecisions { get; private set; }
+        public int MiddleDecisions => MidDecisions;
         public int LateDecisions { get; private set; }
+        public int TotalTacticalChanges => MentalityChanges + PressingChanges + DefensiveLineChanges + FormationChanges;
+        public float BehaviourChanges => TotalTacticalChanges;
 
-        public ManagerPersonalityController(ManagerPersonality personality)
+        public ManagerPersonalityController(ManagerPersonality personality, int initialMinute = 0)
         {
-            profile = ManagerProfile.Create(personality);
+            this.personality = personality;
+            nextDecisionMinute = initialMinute + Random.Range(8, 15);
         }
 
         public void ApplyInitialTactics(MatchEngine engine)
         {
-            engine.SetHomeFormation(profile.PreferredFormation);
-            engine.SetHomeMentality(profile.DefaultMentality);
-            engine.SetHomePressing(profile.DefaultPressing);
-            engine.SetHomeDefensiveLine(profile.DefaultDefensiveLine);
+            if (engine != null) ApplyInitialTactics(engine.HomeTactics);
+        }
+
+        public void ApplyInitialTactics(TacticalSettings tactics)
+        {
+            if (tactics == null) return;
+            switch (personality)
+            {
+                case ManagerPersonality.Possession:
+                    tactics.Mentality = Mentality.Balanced;
+                    tactics.Pressing = Pressing.Medium;
+                    tactics.DefensiveLine = DefensiveLine.Normal;
+                    break;
+                case ManagerPersonality.Gegenpress:
+                    tactics.Mentality = Mentality.Attacking;
+                    tactics.Pressing = Pressing.High;
+                    tactics.DefensiveLine = DefensiveLine.High;
+                    break;
+                case ManagerPersonality.CounterAttack:
+                    tactics.Mentality = Mentality.Defensive;
+                    tactics.Pressing = Pressing.Low;
+                    tactics.DefensiveLine = DefensiveLine.Deep;
+                    break;
+                case ManagerPersonality.Pragmatic:
+                    tactics.Mentality = Mentality.Balanced;
+                    tactics.Pressing = Pressing.Low;
+                    tactics.DefensiveLine = DefensiveLine.Deep;
+                    break;
+                case ManagerPersonality.Direct:
+                    tactics.Mentality = Mentality.Attacking;
+                    tactics.Pressing = Pressing.Medium;
+                    tactics.DefensiveLine = DefensiveLine.Normal;
+                    break;
+                default:
+                    tactics.Mentality = Mentality.Balanced;
+                    tactics.Pressing = Pressing.Medium;
+                    tactics.DefensiveLine = DefensiveLine.Normal;
+                    break;
+            }
         }
 
         public void Update(MatchEngine engine)
         {
+            if (engine == null || engine.State == null || engine.State.Minute >= 90) return;
             int minute = engine.State.Minute;
-
-            if (minute < 10 || minute >= 88)
-                return;
-
-            // Keep decisions spread through the match instead of clustering them.
-            if (minute - lastChangeMinute < 8)
-                return;
-
-            float chance = minute < 30 ? 0.050f : minute < 60 ? 0.050f : 0.060f;
-            bool trailing = engine.State.HomeGoals < engine.State.AwayGoals;
-            bool leading = engine.State.HomeGoals > engine.State.AwayGoals;
-
-            if (trailing)
-                chance += 0.030f;
-            else if (leading)
-                chance += 0.015f;
-
-            if (Random.value > chance)
-                return;
-
+            if (minute < nextDecisionMinute || minute - lastDecisionMinute < 5) return;
+            lastDecisionMinute = minute;
+            nextDecisionMinute = minute + GetDecisionInterval();
             Decisions++;
             if (minute <= 30) EarlyDecisions++;
             else if (minute <= 60) MidDecisions++;
             else LateDecisions++;
-
-            bool changed = ApplyPersonalityDecision(engine, trailing, leading);
-
-            if (changed)
-                lastChangeMinute = minute;
+            ApplyDecision(engine);
         }
 
-        private bool ApplyPersonalityDecision(MatchEngine engine, bool trailing, bool leading)
+        private void ApplyDecision(MatchEngine engine)
         {
-            switch (profile.Personality)
+            int diff = engine.State.HomeGoals - engine.State.AwayGoals;
+            float fitness = engine.HomeTeam.GetAverageFitness(engine.HomeLineup);
+            switch (personality)
             {
-                case ManagerPersonality.Possession:
-                    // Possession managers prioritise control: pressing/shape first,
-                    // with mentality changes used when the score requires them.
-                    if (trailing)
-                        return TryChanges(engine,
-                            () => ChangeMentality(engine, Mentality.Attacking),
-                            () => ChangePressing(engine, Pressing.High),
-                            () => ChangeFormation(engine, Formation.FourThreeThree));
-
-                    if (leading)
-                        return TryChanges(engine,
-                            () => ChangePressing(engine, Pressing.Low),
-                            () => ChangeMentality(engine, Mentality.Balanced),
-                            () => ChangeFormation(engine, Formation.FourTwoThreeOne));
-
-                    return TryChanges(engine,
-                        () => ChangePressing(engine, Pressing.Medium),
-                        () => ChangeFormation(engine, Formation.FourTwoThreeOne),
-                        () => ChangeMentality(engine, Mentality.Balanced));
-
-                case ManagerPersonality.Gegenpress:
-                    // Gegenpress managers actively manipulate pressing and the line.
-                    if (trailing)
-                        return TryChanges(engine,
-                            () => ChangePressing(engine, Pressing.High),
-                            () => ChangeDefensiveLine(engine, DefensiveLine.High),
-                            () => ChangeMentality(engine, Mentality.Attacking));
-
-                    if (leading)
-                        return TryChanges(engine,
-                            () => ChangePressing(engine, Pressing.Medium),
-                            () => ChangeDefensiveLine(engine, DefensiveLine.Normal),
-                            () => ChangeMentality(engine, Mentality.Balanced));
-
-                    return TryChanges(engine,
-                        () => ChangePressing(engine, Pressing.High),
-                        () => ChangeDefensiveLine(engine, DefensiveLine.High),
-                        () => ChangeFormation(engine, Formation.FourThreeThree));
-
-                case ManagerPersonality.CounterAttack:
-                    if (trailing)
-                        return TryChanges(engine,
-                            () => ChangeMentality(engine, Mentality.Attacking),
-                            () => ChangePressing(engine, Pressing.Medium),
-                            () => ChangeDefensiveLine(engine, DefensiveLine.Normal));
-
-                    if (leading)
-                        return TryChanges(engine,
-                            () => ChangeDefensiveLine(engine, DefensiveLine.Deep),
-                            () => ChangePressing(engine, Pressing.Low),
-                            () => ChangeMentality(engine, Mentality.Balanced));
-
-                    return TryChanges(engine,
-                        () => ChangeDefensiveLine(engine, DefensiveLine.Deep),
-                        () => ChangePressing(engine, Pressing.Medium),
-                        () => ChangeFormation(engine, Formation.FourTwoThreeOne));
-
-                case ManagerPersonality.Pragmatic:
-                    if (leading)
-                        return TryChanges(engine,
-                            () => ChangeDefensiveLine(engine, DefensiveLine.Deep),
-                            () => ChangePressing(engine, Pressing.Low),
-                            () => ChangeMentality(engine, Mentality.Defensive));
-
-                    if (trailing && engine.State.Minute >= 55)
-                        return TryChanges(engine,
-                            () => ChangeMentality(engine, Mentality.Attacking),
-                            () => ChangePressing(engine, Pressing.Medium),
-                            () => ChangeDefensiveLine(engine, DefensiveLine.Normal));
-
-                    return TryChanges(engine,
-                        () => ChangePressing(engine, Pressing.Low),
-                        () => ChangeDefensiveLine(engine, DefensiveLine.Deep),
-                        () => ChangeMentality(engine, Mentality.Balanced));
-
-                case ManagerPersonality.Direct:
-                    if (trailing)
-                        return TryChanges(engine,
-                            () => ChangeMentality(engine, Mentality.Attacking),
-                            () => ChangeFormation(engine, Formation.FourFourTwo),
-                            () => ChangePressing(engine, Pressing.High));
-
-                    if (leading)
-                        return TryChanges(engine,
-                            () => ChangeMentality(engine, Mentality.Balanced),
-                            () => ChangePressing(engine, Pressing.Medium),
-                            () => ChangeDefensiveLine(engine, DefensiveLine.Normal));
-
-                    return TryChanges(engine,
-                        () => ChangeFormation(engine, Formation.FourFourTwo),
-                        () => ChangeMentality(engine, Mentality.Attacking),
-                        () => ChangePressing(engine, Pressing.Medium));
-
-                default:
-                    return TryChanges(engine,
-                        () => ChangeMentality(engine, trailing ? Mentality.Attacking : leading ? Mentality.Defensive : Mentality.Balanced),
-                        () => ChangePressing(engine, trailing ? Pressing.High : Pressing.Medium),
-                        () => ChangeDefensiveLine(engine, leading ? DefensiveLine.Deep : DefensiveLine.Normal));
+                case ManagerPersonality.Possession: ApplyPossession(engine, diff, fitness); break;
+                case ManagerPersonality.Gegenpress: ApplyGegenpress(engine, diff, fitness); break;
+                case ManagerPersonality.CounterAttack: ApplyCounterAttack(engine, diff, fitness); break;
+                case ManagerPersonality.Pragmatic: ApplyPragmatic(engine, diff, fitness); break;
+                case ManagerPersonality.Direct: ApplyDirect(engine, diff, fitness); break;
+                default: ApplyBalanced(engine, diff, fitness); break;
             }
         }
 
-        private bool TryChanges(MatchEngine engine, params System.Func<bool>[] changes)
+        private void ApplyBalanced(MatchEngine e, int d, float f)
         {
-            for (int i = 0; i < changes.Length; i++)
-            {
-                if (changes[i]())
-                    return true;
-            }
-
-            return false;
+            SetMentality(e, d < 0 ? Mentality.Attacking : d > 0 && e.State.Minute >= 70 ? Mentality.Defensive : Mentality.Balanced);
+            SetPressing(e, f < 60f ? Pressing.Low : Pressing.Medium);
+            SetDefensiveLine(e, d < 0 ? DefensiveLine.High : DefensiveLine.Normal);
         }
 
-        private bool ChangeMentality(MatchEngine engine, Mentality value)
+        private void ApplyPossession(MatchEngine e, int d, float f)
         {
-            if (engine.HomeTactics.Mentality == value)
-                return false;
+            SetMentality(e, d < 0 ? Mentality.Attacking : Mentality.Balanced);
+            SetPressing(e, f < 58f ? Pressing.Medium : Pressing.High);
+            SetDefensiveLine(e, d < 0 ? DefensiveLine.High : DefensiveLine.Normal);
+        }
 
-            engine.SetHomeMentality(value);
+        private void ApplyGegenpress(MatchEngine e, int d, float f)
+        {
+            bool conserve = f < 58f || (d > 0 && e.State.Minute >= 75);
+            SetMentality(e, d < 0 || e.State.Minute < 70 ? Mentality.Attacking : Mentality.Balanced);
+            SetPressing(e, conserve ? Pressing.Medium : Pressing.High);
+            SetDefensiveLine(e, conserve ? DefensiveLine.Normal : DefensiveLine.High);
+        }
+
+        private void ApplyCounterAttack(MatchEngine e, int d, float f)
+        {
+            if (d > 0)
+            {
+                SetMentality(e, Mentality.Defensive);
+                SetPressing(e, f < 65f ? Pressing.Low : Pressing.Medium);
+                SetDefensiveLine(e, DefensiveLine.Deep);
+            }
+            else if (d < 0)
+            {
+                SetMentality(e, Mentality.Balanced);
+                SetPressing(e, Pressing.Medium);
+                SetDefensiveLine(e, DefensiveLine.Normal);
+            }
+            else
+            {
+                SetMentality(e, Mentality.Balanced);
+                SetPressing(e, Pressing.Low);
+                SetDefensiveLine(e, DefensiveLine.Deep);
+            }
+        }
+
+        private void ApplyPragmatic(MatchEngine e, int d, float f)
+        {
+            if (d > 0)
+            {
+                SetMentality(e, Mentality.Defensive);
+                SetPressing(e, Pressing.Low);
+                SetDefensiveLine(e, DefensiveLine.Deep);
+            }
+            else if (d < 0)
+            {
+                SetMentality(e, Mentality.Attacking);
+                SetPressing(e, Pressing.Medium);
+                SetDefensiveLine(e, DefensiveLine.Normal);
+            }
+            else
+            {
+                SetMentality(e, Mentality.Balanced);
+                SetPressing(e, f < 65f ? Pressing.Low : Pressing.Medium);
+                SetDefensiveLine(e, DefensiveLine.Normal);
+            }
+        }
+
+        private void ApplyDirect(MatchEngine e, int d, float f)
+        {
+            SetMentality(e, d <= 0 ? Mentality.Attacking : Mentality.Balanced);
+            SetPressing(e, f < 60f ? Pressing.Low : Pressing.Medium);
+            SetDefensiveLine(e, d < 0 ? DefensiveLine.High : DefensiveLine.Normal);
+        }
+
+        private void SetMentality(MatchEngine e, Mentality value)
+        {
+            if (e.HomeTactics.Mentality == value) return;
+            e.SetHomeMentality(value);
             MentalityChanges++;
-            TotalTacticalChanges++;
-            return true;
         }
 
-        private bool ChangePressing(MatchEngine engine, Pressing value)
+        private void SetPressing(MatchEngine e, Pressing value)
         {
-            if (engine.HomeTactics.Pressing == value)
-                return false;
-
-            engine.SetHomePressing(value);
+            if (e.HomeTactics.Pressing == value) return;
+            e.SetHomePressing(value);
             PressingChanges++;
-            TotalTacticalChanges++;
-            return true;
         }
 
-        private bool ChangeDefensiveLine(MatchEngine engine, DefensiveLine value)
+        private void SetDefensiveLine(MatchEngine e, DefensiveLine value)
         {
-            if (engine.HomeTactics.DefensiveLine == value)
-                return false;
-
-            engine.SetHomeDefensiveLine(value);
+            if (e.HomeTactics.DefensiveLine == value) return;
+            e.SetHomeDefensiveLine(value);
             DefensiveLineChanges++;
-            TotalTacticalChanges++;
-            return true;
         }
 
-        private bool ChangeFormation(MatchEngine engine, Formation value)
+        private int GetDecisionInterval()
         {
-            if (engine.HomeTactics.Formation == value)
-                return false;
-
-            if (!engine.ChangeFormation(value))
-                return false;
-
-            FormationChanges++;
-            TotalTacticalChanges++;
-            return true;
+            return personality switch
+            {
+                ManagerPersonality.Gegenpress => Random.Range(6, 10),
+                ManagerPersonality.Direct => Random.Range(7, 12),
+                ManagerPersonality.Possession => Random.Range(8, 13),
+                ManagerPersonality.CounterAttack => Random.Range(9, 14),
+                ManagerPersonality.Pragmatic => Random.Range(9, 15),
+                _ => Random.Range(8, 14)
+            };
         }
     }
 }
