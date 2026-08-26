@@ -148,7 +148,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d2ac96bea8fc4024289c35cf4cb0eef9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FootballTactics.Simulation.SimulationLab
-  matchesPerTest: 10000
+  matchesPerTest: 1000
   runOnStart: 0
 --- !u!4 &495898590
 Transform:
