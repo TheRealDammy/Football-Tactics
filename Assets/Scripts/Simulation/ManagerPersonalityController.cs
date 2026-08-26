@@ -2,16 +2,6 @@ using UnityEngine;
 
 namespace FootballTactics.Simulation
 {
-    public enum ManagerPersonality
-    {
-        Balanced,
-        Possession,
-        Gegenpress,
-        CounterAttack,
-        Pragmatic,
-        Direct
-    }
-
     public sealed class ManagerPersonalityController
     {
         private readonly ManagerPersonality personality;
@@ -46,39 +36,12 @@ namespace FootballTactics.Simulation
         public void ApplyInitialTactics(TacticalSettings tactics)
         {
             if (tactics == null) return;
-            switch (personality)
-            {
-                case ManagerPersonality.Possession:
-                    tactics.Mentality = Mentality.Balanced;
-                    tactics.Pressing = Pressing.Medium;
-                    tactics.DefensiveLine = DefensiveLine.Normal;
-                    break;
-                case ManagerPersonality.Gegenpress:
-                    tactics.Mentality = Mentality.Attacking;
-                    tactics.Pressing = Pressing.High;
-                    tactics.DefensiveLine = DefensiveLine.High;
-                    break;
-                case ManagerPersonality.CounterAttack:
-                    tactics.Mentality = Mentality.Defensive;
-                    tactics.Pressing = Pressing.Low;
-                    tactics.DefensiveLine = DefensiveLine.Deep;
-                    break;
-                case ManagerPersonality.Pragmatic:
-                    tactics.Mentality = Mentality.Balanced;
-                    tactics.Pressing = Pressing.Low;
-                    tactics.DefensiveLine = DefensiveLine.Deep;
-                    break;
-                case ManagerPersonality.Direct:
-                    tactics.Mentality = Mentality.Attacking;
-                    tactics.Pressing = Pressing.Medium;
-                    tactics.DefensiveLine = DefensiveLine.Normal;
-                    break;
-                default:
-                    tactics.Mentality = Mentality.Balanced;
-                    tactics.Pressing = Pressing.Medium;
-                    tactics.DefensiveLine = DefensiveLine.Normal;
-                    break;
-            }
+
+            ManagerProfile profile = ManagerProfile.Create(personality);
+            tactics.Formation = profile.PreferredFormation;
+            tactics.Mentality = profile.DefaultMentality;
+            tactics.Pressing = profile.DefaultPressing;
+            tactics.DefensiveLine = profile.DefaultDefensiveLine;
         }
 
         public void Update(MatchEngine engine)
