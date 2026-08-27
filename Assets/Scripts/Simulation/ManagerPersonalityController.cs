@@ -92,7 +92,7 @@ namespace FootballTactics.Simulation
             }
         }
 
-        public void Update(MatchEngine engine)
+        public void ApplyInitialTactics(TacticalSettings tactics)
         {
             if (engine == null || engine.State == null)
                 return;
@@ -156,6 +156,138 @@ namespace FootballTactics.Simulation
             }
         }
 
+        private void ApplyBalanced(MatchEngine engine, int goalDifference, float fitness)
+        {
+            if (goalDifference < 0)
+                SetMentality(engine, Mentality.Attacking);
+            else if (goalDifference > 0 && engine.State.Minute >= 70)
+                SetMentality(engine, Mentality.Defensive);
+            else
+                SetMentality(engine, Mentality.Balanced);
+
+            if (fitness < 62f)
+                SetPressing(engine, Pressing.Low);
+            else
+                SetPressing(engine, Pressing.Medium);
+        }
+
+        private void ApplyPossession(MatchEngine engine, int goalDifference, float fitness)
+        {
+            SetMentality(engine, goalDifference < 0 ? Mentality.Attacking : Mentality.Balanced);
+
+            if (fitness < 62f)
+                SetPressing(engine, Pressing.Medium);
+            else
+                SetPressing(engine, Pressing.High);
+
+            SetDefensiveLine(
+                engine,
+                goalDifference < 0 ? DefensiveLine.High : DefensiveLine.Normal);
+        }
+
+        private void ApplyGegenpress(MatchEngine engine, int goalDifference, float fitness)
+        {
+            if (fitness < 58f || (goalDifference > 0 && engine.State.Minute >= 75))
+            {
+                SetPressing(engine, Pressing.Medium);
+                SetDefensiveLine(engine, DefensiveLine.Normal);
+            }
+            else
+            {
+                SetPressing(engine, Pressing.High);
+                SetDefensiveLine(engine, DefensiveLine.High);
+            }
+
+            SetMentality(
+                engine,
+                goalDifference < 0 || engine.State.Minute < 70
+                    ? Mentality.Attacking
+                    : Mentality.Balanced);
+        }
+
+        private void ApplyCounterAttack(MatchEngine engine, int goalDifference, float fitness)
+        {
+            if (goalDifference > 0)
+            {
+                SetMentality(engine, Mentality.Defensive);
+                SetDefensiveLine(engine, DefensiveLine.Deep);
+                SetPressing(engine, fitness < 65f ? Pressing.Low : Pressing.Medium);
+                return;
+            }
+            else if (d < 0)
+            {
+                SetFormation(e, Formation.FourTwoThreeOne);
+                SetMentality(e, Mentality.Balanced);
+                SetPressing(e, Pressing.Medium);
+                SetDefensiveLine(e, DefensiveLine.Normal);
+            }
+            else
+            {
+                SetFormation(e, Formation.FourFourTwo);
+                SetMentality(e, Mentality.Balanced);
+                SetPressing(e, Pressing.Low);
+                SetDefensiveLine(e, DefensiveLine.Deep);
+            }
+        }
+
+        private void ApplyPragmatic(MatchEngine e, int d, float f)
+        {
+            if (d > 0)
+            {
+                SetFormation(e, Formation.FourFourTwo);
+                SetMentality(e, Mentality.Defensive);
+                SetPressing(e, Pressing.Low);
+                SetDefensiveLine(e, DefensiveLine.Deep);
+            }
+            else if (d < 0)
+            {
+                SetFormation(e, Formation.FourThreeThree);
+                SetMentality(e, Mentality.Attacking);
+                SetPressing(e, Pressing.Medium);
+                SetDefensiveLine(e, DefensiveLine.Normal);
+            }
+            else
+            {
+                SetFormation(e, Formation.FourFourTwo);
+                SetMentality(e, Mentality.Balanced);
+                SetPressing(e, f < 65f ? Pressing.Low : Pressing.Medium);
+                SetDefensiveLine(e, DefensiveLine.Normal);
+            }
+        }
+
+        private void ApplyDirect(MatchEngine e, int d, float f)
+        {
+            SetFormation(e, d < 0 ? Formation.FourThreeThree : Formation.FourFourTwo);
+            SetMentality(e, d <= 0 ? Mentality.Attacking : Mentality.Balanced);
+            SetPressing(e, f < 60f ? Pressing.Low : Pressing.Medium);
+            SetDefensiveLine(e, d < 0 ? DefensiveLine.High : DefensiveLine.Normal);
+        }
+
+        private void SetFormation(MatchEngine e, Formation value)
+        {
+            if (e.HomeTactics.Formation == value) return;
+            if (!e.ChangeFormation(value)) return;
+            FormationChanges++;
+        }
+
+        private void SetMentality(MatchEngine e, Mentality value)
+        {
+            if (e.HomeTactics.Mentality == value) return;
+            e.SetHomeMentality(value);
+            MentalityChanges++;
+        }
+
+        private void SetPressing(MatchEngine e, Pressing value)
+        {
+            if (e.HomeTactics.Pressing == value) return;
+            e.SetHomePressing(value);
+            PressingChanges++;
+        }
+
+        private void SetDefensiveLine(MatchEngine e, DefensiveLine value)
+        {
+            if (e.HomeTactics.DefensiveLine == value) return;
+            e.SetHomeDefensiveLine(value);
         private void ApplyBalanced(MatchEngine engine, int goalDifference, float fitness)
         {
             if (goalDifference < 0)
@@ -296,6 +428,16 @@ namespace FootballTactics.Simulation
         {
             return personality switch
             {
+                ManagerPersonality.Gegenpress => Random.Range(7, 11),
+                ManagerPersonality.Direct => Random.Range(8, 13),
+                ManagerPersonality.Possession => Random.Range(9, 14),
+                ManagerPersonality.CounterAttack => Random.Range(10, 15),
+                ManagerPersonality.Pragmatic => Random.Range(10, 16),
+                _ => Random.Range(9, 15)
+            };
+        }
+    }
+}
                 ManagerPersonality.Gegenpress => Random.Range(6, 10),
                 ManagerPersonality.Possession => Random.Range(8, 13),
                 ManagerPersonality.CounterAttack => Random.Range(9, 14),
