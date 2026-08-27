@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace FootballTactics.Simulation
 {
     public enum Mentality
@@ -24,11 +26,8 @@ namespace FootballTactics.Simulation
     public class TacticalSettings
     {
         public Formation Formation { get; set; } = Formation.FourThreeThree;
-
         public Mentality Mentality { get; set; } = Mentality.Balanced;
-
         public Pressing Pressing { get; set; } = Pressing.Medium;
-
         public DefensiveLine DefensiveLine { get; set; } = DefensiveLine.Normal;
 
         public float GetAttackModifier()
