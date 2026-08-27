@@ -24,22 +24,11 @@ namespace FootballTactics.Simulation
         private int nextDecisionMinute;
         private int lastDecisionMinute = -10;
 
-        public ManagerPersonality Personality => personality;
-        public int Decisions { get; private set; }
-        public int TotalDecisions => Decisions;
         public int TotalDecisions { get; private set; }
         public int MentalityChanges { get; private set; }
         public int PressingChanges { get; private set; }
         public int DefensiveLineChanges { get; private set; }
         public int FormationChanges { get; private set; }
-        public int EarlyDecisions { get; private set; }
-        public int MidDecisions { get; private set; }
-        public int MiddleDecisions => MidDecisions;
-        public int LateDecisions { get; private set; }
-        public int TotalTacticalChanges => MentalityChanges + PressingChanges + DefensiveLineChanges + FormationChanges;
-        public float BehaviourChanges => TotalTacticalChanges;
-
-        public ManagerPersonalityController(ManagerPersonality personality, int initialMinute = 0)
 
         public int EarlyDecisions { get; private set; }
         public int MiddleDecisions { get; private set; }
@@ -58,31 +47,6 @@ namespace FootballTactics.Simulation
             nextDecisionMinute = initialMinute + Random.Range(8, 15);
         }
 
-        public void ApplyInitialTactics(MatchEngine engine)
-        {
-            if (engine == null) return;
-
-            ManagerProfile profile = ManagerProfile.Create(personality);
-            engine.SetHomeMentality(profile.DefaultMentality);
-            engine.SetHomePressing(profile.DefaultPressing);
-            engine.SetHomeDefensiveLine(profile.DefaultDefensiveLine);
-
-            // Changing the formation through the engine also rebuilds the lineup.
-            // This prevents the manager's preferred formation from disagreeing with
-            // the actual lineup used by the simulation.
-            if (engine.HomeTactics.Formation != profile.PreferredFormation)
-                engine.ChangeFormation(profile.PreferredFormation);
-        }
-
-        public void ApplyInitialTactics(TacticalSettings tactics)
-        {
-            if (tactics == null) return;
-
-            ManagerProfile profile = ManagerProfile.Create(personality);
-            tactics.Formation = profile.PreferredFormation;
-            tactics.Mentality = profile.DefaultMentality;
-            tactics.Pressing = profile.DefaultPressing;
-            tactics.DefensiveLine = profile.DefaultDefensiveLine;
         public void ApplyInitialTactics(TacticalSettings tactics)
         {
             if (tactics == null)
@@ -128,19 +92,8 @@ namespace FootballTactics.Simulation
             }
         }
 
-        public void Update(MatchEngine engine)
+        public void ApplyInitialTactics(TacticalSettings tactics)
         {
-            if (engine == null || engine.State == null || engine.State.Minute >= 90) return;
-            int minute = engine.State.Minute;
-            if (minute < nextDecisionMinute || minute - lastDecisionMinute < 5) return;
-
-            lastDecisionMinute = minute;
-            nextDecisionMinute = minute + GetDecisionInterval();
-            Decisions++;
-
-            if (minute <= 30) EarlyDecisions++;
-            else if (minute <= 60) MidDecisions++;
-            else LateDecisions++;
             if (engine == null || engine.State == null)
                 return;
 
@@ -169,28 +122,6 @@ namespace FootballTactics.Simulation
 
         private void ApplyDecision(MatchEngine engine)
         {
-            int diff = engine.State.HomeGoals - engine.State.AwayGoals;
-            float fitness = engine.HomeTeam.GetAverageFitness(engine.HomeLineup);
-
-            switch (personality)
-            {
-                case ManagerPersonality.Possession:
-                    ApplyPossession(engine, diff, fitness);
-                    break;
-                case ManagerPersonality.Gegenpress:
-                    ApplyGegenpress(engine, diff, fitness);
-                    break;
-                case ManagerPersonality.CounterAttack:
-                    ApplyCounterAttack(engine, diff, fitness);
-                    break;
-                case ManagerPersonality.Pragmatic:
-                    ApplyPragmatic(engine, diff, fitness);
-                    break;
-                case ManagerPersonality.Direct:
-                    ApplyDirect(engine, diff, fitness);
-                    break;
-                default:
-                    ApplyBalanced(engine, diff, fitness);
             int goalDifference =
                 engine.State.HomeGoals - engine.State.AwayGoals;
 
@@ -225,50 +156,63 @@ namespace FootballTactics.Simulation
             }
         }
 
-        private void ApplyBalanced(MatchEngine e, int d, float f)
+        private void ApplyBalanced(MatchEngine engine, int goalDifference, float fitness)
         {
-            SetFormation(e, d < 0 && e.State.Minute >= 60
-                ? Formation.FourThreeThree
-                : Formation.FourTwoThreeOne);
-            SetMentality(e, d < 0 ? Mentality.Attacking : d > 0 && e.State.Minute >= 70 ? Mentality.Defensive : Mentality.Balanced);
-            SetPressing(e, f < 60f ? Pressing.Low : Pressing.Medium);
-            SetDefensiveLine(e, d < 0 ? DefensiveLine.High : DefensiveLine.Normal);
+            if (goalDifference < 0)
+                SetMentality(engine, Mentality.Attacking);
+            else if (goalDifference > 0 && engine.State.Minute >= 70)
+                SetMentality(engine, Mentality.Defensive);
+            else
+                SetMentality(engine, Mentality.Balanced);
+
+            if (fitness < 62f)
+                SetPressing(engine, Pressing.Low);
+            else
+                SetPressing(engine, Pressing.Medium);
         }
 
-        private void ApplyPossession(MatchEngine e, int d, float f)
+        private void ApplyPossession(MatchEngine engine, int goalDifference, float fitness)
         {
-            // The simulations favour 4-2-3-1 for control. Keep the shape unless
-            // chasing the game, when 4-3-3 produces more attacking output.
-            SetFormation(e, d < 0 && e.State.Minute >= 60
-                ? Formation.FourThreeThree
-                : Formation.FourTwoThreeOne);
-            SetMentality(e, d < 0 ? Mentality.Attacking : Mentality.Balanced);
-            SetPressing(e, f < 58f ? Pressing.Medium : Pressing.High);
-            SetDefensiveLine(e, d < 0 ? DefensiveLine.High : DefensiveLine.Normal);
+            SetMentality(engine, goalDifference < 0 ? Mentality.Attacking : Mentality.Balanced);
+
+            if (fitness < 62f)
+                SetPressing(engine, Pressing.Medium);
+            else
+                SetPressing(engine, Pressing.High);
+
+            SetDefensiveLine(
+                engine,
+                goalDifference < 0 ? DefensiveLine.High : DefensiveLine.Normal);
         }
 
-        private void ApplyGegenpress(MatchEngine e, int d, float f)
+        private void ApplyGegenpress(MatchEngine engine, int goalDifference, float fitness)
         {
-            // 4-3-3 complements the high-press profile and was the strongest
-            // attacking shape in the squad matrix for direct/high-tempo play.
-            SetFormation(e, d > 0 && e.State.Minute >= 75
-                ? Formation.FourTwoThreeOne
-                : Formation.FourThreeThree);
-
-            bool conserve = f < 58f || (d > 0 && e.State.Minute >= 75);
-            SetMentality(e, d < 0 || e.State.Minute < 70 ? Mentality.Attacking : Mentality.Balanced);
-            SetPressing(e, conserve ? Pressing.Medium : Pressing.High);
-            SetDefensiveLine(e, conserve ? DefensiveLine.Normal : DefensiveLine.High);
-        }
-
-        private void ApplyCounterAttack(MatchEngine e, int d, float f)
-        {
-            if (d > 0)
+            if (fitness < 58f || (goalDifference > 0 && engine.State.Minute >= 75))
             {
-                SetFormation(e, Formation.FourFourTwo);
-                SetMentality(e, Mentality.Defensive);
-                SetPressing(e, f < 65f ? Pressing.Low : Pressing.Medium);
-                SetDefensiveLine(e, DefensiveLine.Deep);
+                SetPressing(engine, Pressing.Medium);
+                SetDefensiveLine(engine, DefensiveLine.Normal);
+            }
+            else
+            {
+                SetPressing(engine, Pressing.High);
+                SetDefensiveLine(engine, DefensiveLine.High);
+            }
+
+            SetMentality(
+                engine,
+                goalDifference < 0 || engine.State.Minute < 70
+                    ? Mentality.Attacking
+                    : Mentality.Balanced);
+        }
+
+        private void ApplyCounterAttack(MatchEngine engine, int goalDifference, float fitness)
+        {
+            if (goalDifference > 0)
+            {
+                SetMentality(engine, Mentality.Defensive);
+                SetDefensiveLine(engine, DefensiveLine.Deep);
+                SetPressing(engine, fitness < 65f ? Pressing.Low : Pressing.Medium);
+                return;
             }
             else if (d < 0)
             {
